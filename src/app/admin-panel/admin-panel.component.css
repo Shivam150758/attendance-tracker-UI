@@ -1,0 +1,134 @@
+@import url('https://fonts.googleapis.com/css?family=Raleway:400,700');
+
+.main-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow-y: hidden;
+}
+
+.header {
+    flex: 0 0 auto;
+}
+
+.content-wrapper {
+    display: flex;
+    flex: 1;
+}
+
+.side-nav {
+    flex: 0 0 200px;
+}
+
+.content {
+    flex: 1;
+    padding: 16px;
+}
+
+.table-container {
+    width: 100%;
+    height: 83vh;
+    max-height: 83vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin-bottom: 16px;
+}
+
+.table-container table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.detailTableHeader2 {
+    position: sticky;
+    top: 0;
+    background-color: #5D54A4;
+    color: white;
+    font-size: 16px;
+    padding: 5px;
+    z-index: 1;
+    border-bottom: 1px solid #ddd;
+    cursor: pointer;
+    user-select: none;
+}
+
+.detailTableHeader2 span {
+    font-size: 0.8em;
+    margin-left: 5px;
+}
+
+.detailTableFields2 {
+    border-bottom: 1px solid #ddd;
+    padding: 8px;
+}
+
+.table-container::-webkit-scrollbar {
+    width: 10px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 5px grey;
+    border-radius: 10px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: rgb(163, 163, 163);
+    border-radius: 10px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: rgb(163, 163, 163);
+}
+
+.popUpTitle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.closeButton {
+    margin: -12px -12px -12px auto;
+}
+
+.dialogActions {
+    justify-content: flex-end;
+}
+
+.attendanceHeader {
+    color: black;
+    font-size: 18px;
+}
+
+.buttonDiv {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.dropdowns {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.dropdown {
+    width: 150px;
+    display: flex;
+    flex-direction: column;
+}
+
+.tableTitle {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.radio-container {
+    margin-bottom: 20px;
+}
+
+.right-radio {
+    margin-left: 200px;
+}

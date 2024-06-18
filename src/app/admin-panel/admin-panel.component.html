@@ -1,0 +1,180 @@
+<div class="main-container">
+    <app-loader></app-loader>
+    <app-header></app-header>
+    <div class="content-wrapper">
+        <app-sidenav></app-sidenav>
+        <div class="content">
+            <div class="buttonDiv">
+                <span class="tableTitle">User List</span>
+                <button class="matButton" mat-raised-button color="primary"
+                    (click)="downloadReportPopUp()"><mat-icon>get_app</mat-icon>Download Report</button>
+            </div>
+            <div style="border: 1px solid black;" class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="detailTableHeader2" (click)="sortData('name')">Name
+                                <span *ngIf="sortedColumn === 'name'">
+                                    <span *ngIf="sortAscending">&#9650;</span>
+                                    <span *ngIf="!sortAscending">&#9660;</span>
+                                </span>
+                            </th>
+                            <th class="detailTableHeader2" (click)="sortData('wfh')">WFH
+                                <span *ngIf="sortedColumn === 'wfh'">
+                                    <span *ngIf="sortAscending">&#9650;</span>
+                                    <span *ngIf="!sortAscending">&#9660;</span>
+                                </span>
+                            </th>
+                            <th class="detailTableHeader2" (click)="sortData('wfo')">WFO
+                                <span *ngIf="sortedColumn === 'wfo'">
+                                    <span *ngIf="sortAscending">&#9650;</span>
+                                    <span *ngIf="!sortAscending">&#9660;</span>
+                                </span>
+                            </th>
+                            <th class="detailTableHeader2" (click)="sortData('wfhFriday')">WFH-Friday
+                                <span *ngIf="sortedColumn === 'wfhFriday'">
+                                    <span *ngIf="sortAscending">&#9650;</span>
+                                    <span *ngIf="!sortAscending">&#9660;</span>
+                                </span>
+                            </th>
+                            <th class="detailTableHeader2" (click)="sortData('wfoFriday')">WFO-Friday
+                                <span *ngIf="sortedColumn === 'wfoFriday'">
+                                    <span *ngIf="sortAscending">&#9650;</span>
+                                    <span *ngIf="!sortAscending">&#9660;</span>
+                                </span>
+                            </th>
+                            <th class="detailTableHeader2" (click)="sortData('leaves')">Leaves
+                                <span *ngIf="sortedColumn === 'leaves'">
+                                    <span *ngIf="sortAscending">&#9650;</span>
+                                    <span *ngIf="!sortAscending">&#9660;</span>
+                                </span>
+                            </th>
+                            <th class="detailTableHeader2" (click)="sortData('holidays')">Holidays
+                                <span *ngIf="sortedColumn === 'holidays'">
+                                    <span *ngIf="sortAscending">&#9650;</span>
+                                    <span *ngIf="!sortAscending">&#9660;</span>
+                                </span>
+                            </th>
+                            <th class="detailTableHeader2" (click)="sortData('team')">Team
+                                <span *ngIf="sortedColumn === 'team'">
+                                    <span *ngIf="sortAscending">&#9650;</span>
+                                    <span *ngIf="!sortAscending">&#9660;</span>
+                                </span>
+                            </th>
+                            <th class="detailTableHeader2">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let item of mergedArray">
+                            <td class="detailTableFields2">{{ item.name }}</td>
+                            <td class="detailTableFields2">{{ item.wfh }}</td>
+                            <td class="detailTableFields2">{{ item.wfo }}</td>
+                            <td class="detailTableFields2">{{ item.wfhFriday }}</td>
+                            <td class="detailTableFields2">{{ item.wfoFriday }}</td>
+                            <td class="detailTableFields2">{{ item.leaves }}</td>
+                            <td class="detailTableFields2">{{ item.holidays }}</td>
+                            <td class="detailTableFields2">{{ item.team }}</td>
+                            <td class="detailTableFields2"><mat-icon style="cursor: pointer;"
+                                    (click)="openUserDetails(item)">visibility</mat-icon></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ng-template #userDetails>
+    <div mat-dialog-content class="content">
+        <div class="popUpTitle">
+            <strong><span class="attendanceHeader"> User Details</span></strong>
+            <button mat-icon-button mat-dialog-close class="closeButton">
+                <mat-icon>close</mat-icon>
+            </button>
+        </div>
+
+        <table style="width: 100%;">
+            <tr>
+                <td><strong>Username: </strong>{{username}}</td>
+                <td><strong>EmailId: </strong>{{emailId}}</td>
+            </tr>
+            <tr>
+                <td><strong>Team: </strong>{{team}}</td>
+                <td><strong>Last Login: </strong>{{lastlogin | date: 'dd MMMM yyyy HH:mm'}}</td>
+            </tr>
+        </table>
+        <hr>
+        <div style="margin-top: 20px;">
+            <div class="popUpTitle">
+                <span class="attendanceHeader">
+                    <strong>Attendance for {{attendanceData.quarter}} {{attendanceData.year}}</strong>
+                </span>
+            </div>
+            <table style="width: 100%;">
+                <tr>
+                    <td><strong>WFH: </strong>{{attendanceData.wfh}}</td>
+                    <td><strong>WFO: </strong>{{attendanceData.wfo}}</td>
+                </tr>
+                <tr>
+                    <td><strong>Leaves: </strong>{{attendanceData.leaves}}</td>
+                    <td><strong>Public Holiday: </strong>{{attendanceData.holidays}}</td>
+                </tr>
+                <tr>
+                    <td><strong>WFH - Friday: </strong>{{attendanceData.wfhFriday}}</td>
+                    <td><strong>WFO - Friday: </strong>{{attendanceData.wfoFriday}}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div mat-dialog-actions class="dialogActions">
+        <button mat-raised-button color="warn" mat-dialog-close class="popupButton2">Close</button>
+    </div>
+</ng-template>
+
+<ng-template #downloadAttendanceReport>
+    <div mat-dialog-title class="popUpTitle2">Download Attendance Report</div>
+    <hr>
+    <div mat-dialog-content>
+        <div class="radio-container">
+            <mat-radio-group color="primary" aria-label="Select an option" [(ngModel)]="selectedRadio">
+                <mat-radio-button class="left-radio" value="1">Monthly</mat-radio-button>
+                <mat-radio-button class="right-radio" value="2">Quarterly</mat-radio-button>
+            </mat-radio-group>
+        </div>
+
+        <div class="dropdowns">
+            <div class="dropdown">
+                <mat-form-field>
+                    <mat-label>Year</mat-label>
+                    <mat-select [(ngModel)]="selectedYear">
+                        <mat-option *ngFor="let year of distinctYears" [value]="year">{{year}}</mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+
+            <div *ngIf="selectedRadio == '2'" class="dropdown">
+                <mat-form-field>
+                    <mat-label>Quarter</mat-label>
+                    <mat-select [(ngModel)]="selectedQuarter">
+                        <mat-option *ngFor="let quarter of distinctQuarters" [value]="quarter">
+                            {{ quarter }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+
+            <div *ngIf="selectedRadio == '1'" class="dropdown">
+                <mat-form-field>
+                    <mat-label>Month</mat-label>
+                    <mat-select [(ngModel)]="selectedMonth">
+                        <mat-option *ngFor="let month of distinctMonths" [value]="month">{{monthNames[month]}}</mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+        </div>
+    </div>
+    <div mat-dialog-actions class="dialogActions">
+        <button mat-raised-button color="warn" mat-dialog-close class="popupButton2">Close</button>
+        <button mat-raised-button color="primary" (click)="downloadReport()" class="popupButton2">Download</button>
+    </div>
+</ng-template>

@@ -1,0 +1,94 @@
+<div class="main-container">
+    <app-loader></app-loader>
+    <app-header></app-header>
+    <div class="content-wrapper">
+        <app-sidenav></app-sidenav>
+        <div class="content">
+            <div class="dropdowns">
+                <div class="form-field">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Year</mat-label>
+                        <mat-select [(ngModel)]="selectedYear" (selectionChange)="openDetailedAttendance()">
+                            <mat-option *ngFor="let year of distinctYears" [value]="year">{{year}}</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                    <mat-form-field class="dropdown" appearance="outline">
+                        <mat-label>Month</mat-label>
+                        <mat-select [(ngModel)]="selectedMonth" (selectionChange)="openDetailedAttendance()">
+                            <mat-option *ngFor="let month of distinctMonths"
+                                [value]="month">{{monthNames[month]}}</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+            </div>
+            <div style="border: 1px solid black;" class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="detailTableHeader2" [class.sort-asc]="sortColumn === 'date' && sortAscending"
+                                [class.sort-desc]="sortColumn === 'date' && !sortAscending" (click)="sortData('date')">
+                                Date</th>
+                            <th class="detailTableHeader2"
+                                [class.sort-asc]="sortColumn === 'attendance' && sortAscending"
+                                [class.sort-desc]="sortColumn === 'attendance' && !sortAscending"
+                                (click)="sortData('attendance')">Attendance</th>
+                            <th class="detailTableHeader2">Shift</th>
+                            <th class="detailTableHeader2">Shift Allowance (₹)</th>
+                            <th class="detailTableHeader2">Food Allowance (₹)</th>
+                            <th class="detailTableHeader2">Total Allowance (₹)</th>
+                            <th class="detailTableHeader2">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let item of detailedAttendanceData">
+                            <td class="detailTableFields2" style="padding: 10px;">{{ item.date }}</td>
+                            <td class="detailTableFields2">{{ item.attendance }}</td>
+                            <td class="detailTableFields2"> Shift </td>
+                            <td class="detailTableFields2"> Shift </td>
+                            <td class="detailTableFields2"> Shift </td>
+                            <td class="detailTableFields2"> Shift </td>
+                            <td class="detailTableFields2"><mat-icon style="cursor: pointer;"
+                                    (click)="openDialog(item)">edit</mat-icon></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ng-template #editDialog>
+    <h1 mat-dialog-title style="background-color: #5D54A4; color: white;">Edit Attendance</h1>
+    <div mat-dialog-content>
+        <div class="popUpContent">
+            <mat-form-field appearance="outline" class="form-field">
+                <mat-label>Selected Date</mat-label>
+                <input matInput [matDatepicker]="picker" disabled [(ngModel)]="popUpDate">
+                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field">
+                <mat-label>Attendance</mat-label>
+                <mat-select [(ngModel)]="popUpAttendance">
+                    <ng-container *ngFor="let option of options">
+                        <mat-option [value]="option">{{ option }}</mat-option>
+                    </ng-container>
+                </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field">
+                <mat-label>Shift</mat-label>
+                <mat-select [(ngModel)]="popUpShift">
+                    <mat-option value="Morning">Morning</mat-option>
+                    <mat-option value="Afternoon">Afternoon</mat-option>
+                    <mat-option value="Night">Night</mat-option>
+                </mat-select>
+            </mat-form-field>
+        </div>
+    </div>
+    <div mat-dialog-actions class="dialog-actions">
+        <button mat-raised-button color="primary" style="margin: 10px;">Send for Approval</button>
+        <button mat-raised-button color="warn" mat-dialog-close>Close</button>        
+    </div>
+</ng-template>

@@ -1,0 +1,307 @@
+import { Component, TemplateRef, ViewChild } from '@angular/core';
+import { LoaderService } from 'src/service/Loader/loader.service';
+import * as moment from 'moment-timezone';
+import { Router } from '@angular/router';
+import { SharedService } from 'src/service/EventEmitter/shared.service';
+import { Subscription } from 'rxjs';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { ThemePalette, provideNativeDateAdapter } from '@angular/material/core';
+import { MatDatepickerInputEvent } from '@angular/material/datepicker';
+import { ApiCallingService } from 'src/service/API/api-calling.service';
+import { MatSort } from '@angular/material/sort';
+import { ProgressSpinnerMode } from '@angular/material/progress-spinner';
+
+@Component({
+  selector: 'app-user-dashboard',
+  templateUrl: './user-dashboard.component.html',
+  styleUrls: ['./user-dashboard.component.css'],
+  providers: [provideNativeDateAdapter()]
+})
+export class UserDashboardComponent {
+
+  currentQuarter!: number;
+  currentYear!: number;
+  private subscription: Subscription;
+  selectedDate: Date | null = null;
+  selectedAttendance: any;
+  options: any[] = [];
+  number: number = 0;
+  remaining: any = 0;
+  days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  dialogRef1!: MatDialogRef<any>;
+  dialogRef2!: MatDialogRef<any>;
+  detailedAttendancePopup!: MatDialogRef<any>;
+  username: any;
+  team: any;
+  attendanceData: any = {
+    wfo: 0,
+    leaves: 0,
+    holidays: 0,
+    wfhFriday: 0,
+    wfoFriday: 0,
+  };
+  detailedArray: any[] = [];
+  popUpTitle: any;
+  color: ThemePalette = 'warn';
+  mode: ProgressSpinnerMode = 'determinate';
+  value = 80;
+  selectedYear: any;
+  selectedQuarter: any;
+  months: string[] = [];
+
+  @ViewChild('dialogTemplate')
+  dialogTemplate!: TemplateRef<any>;
+
+  @ViewChild('confirmationPopUp')
+  confirmationPopUp!: TemplateRef<any>;
+
+  @ViewChild('detailedAttendance')
+  detailedAttendance!: TemplateRef<any>;
+
+  @ViewChild(MatSort)
+  sort!: MatSort;
+
+  displayedColumns: string[] = ['date', 'attendance'];
+
+  time!: string;
+  email!: any;
+  now!: moment.Moment;
+  attendanceError: boolean = false;
+  attendanceSuccess: boolean = false;
+  distinctYears: string[] = [];
+  distinctQuarters: string[] = [];
+
+  constructor(private loader: LoaderService, private router: Router, private sharedService: SharedService,
+    private dialog: MatDialog, private api: ApiCallingService) {
+    this.subscription = this.sharedService.popupTrigger.subscribe(data => {
+      this.openPopup(data);
+    });
+  }
+
+  async ngOnInit() {
+    this.loader.show();
+    let auth = sessionStorage.getItem('auth');
+    if (auth !== 'Authorized') {
+      this.router.navigateByUrl('/');
+    } else {
+      await this.getCurrentQuarterAndYear();
+      await this.loadDistinctYears();
+      await this.loadDistinctQuarters();
+      this.selectedYear = this.currentYear.toString();
+      this.selectedQuarter = "Q" + this.currentQuarter;
+      let userDataString = sessionStorage.getItem('user');
+      if (userDataString) {
+        let userData = JSON.parse(userDataString);
+        this.username = userData.name;
+        this.email = userData.emailId;
+        this.team = userData.team;
+        this.getUserAttendance();
+      } else {
+
+      }
+    }
+  }
+
+  getUserAttendance() {
+    this.loader.show();
+    if (this.selectedQuarter == 'Q1') {
+      this.months = ['January', 'February', 'March']
+    } else if (this.selectedQuarter == 'Q2') {
+      this.months = ['April', 'May', 'June']
+    } else if (this.selectedQuarter == 'Q3') {
+      this.months = ['July', 'August', 'September']
+    } else if (this.selectedQuarter == 'Q4') {
+      this.months = ['October', 'November', 'December']
+    }
+    this.api.getUserAttendance(this.email, this.selectedYear, this.selectedQuarter).subscribe({
+      next: (response) => {
+        if (response) {
+          this.attendanceData = response;
+          this.number = response.wfh;
+          this.remaining = 13 - this.number;
+          this.value = (10 / 13) * 100;
+        }
+        this.loader.hide();
+      },
+      error: (error) => {
+        this.loader.hide();
+      }
+    });
+  }
+
+  getCurrentQuarterAndYear(): Promise<void> {
+    return new Promise((resolve) => {
+      this.now = moment.tz('Asia/Kolkata');
+      this.currentQuarter = this.now.quarter();
+      this.currentYear = this.now.year();
+      this.time = this.now.format("DD-MMMM-YYYY HH:mm:ss");
+      resolve();
+    });
+  }
+
+  openPopup(data: any) {
+    this.openDialog();
+  }
+
+  openDialog() {
+    this.selectedDate = null;
+    this.selectedAttendance = null;
+    this.dialogRef1 = this.dialog.open(this.dialogTemplate, {
+      panelClass: 'custom-dialog-container',
+      disableClose: true,
+      width: '800px'
+    });
+
+    this.dialogRef1.afterClosed().subscribe(result => {
+      if (result === 'reopen') {
+        this.openDialog();
+      }
+    });
+  }
+
+  openDialog2() {
+    this.dialogRef2 = this.dialog.open(this.confirmationPopUp, {
+      panelClass: 'custom-dialog-container',
+      disableClose: true,
+      width: '500px'
+    });
+
+    this.dialogRef2.afterClosed().subscribe(result => {
+      if (result === 'confirm') {
+        this.dialogRef1.close();
+      } else {
+      }
+    });
+  }
+
+  confirmAttendance() {
+    this.loader.show();
+    this.dialogRef2.close('confirm');
+    this.now = moment.tz('Asia/Kolkata');
+    this.time = this.now.format("DD-MMMM-YYYY HH:mm:ss");
+    const formattedDate = moment(this.selectedDate).format('DD-MMMM-YYYY');
+    const selDate = moment(this.selectedDate);
+    const year = selDate.year();
+    const quarter = selDate.quarter();
+    const month = selDate.month();
+
+    this.api.attendance(this.email, this.email, formattedDate, this.selectedAttendance, year.toString(),
+      "Q" + quarter, (month + 1).toString(), this.email, this.time.toString()).subscribe({
+        next: (response) => {
+          this.api.addUserAttendance(this.email, this.email, this.selectedAttendance, year.toString(),
+            "Q" + quarter, this.username).subscribe({
+              next: (response) => {
+                this.api.addMonthlyAttendance(this.email, this.email, this.selectedAttendance, year.toString(),
+                  "Q" + quarter, this.username, (month + 1).toString()).subscribe({
+                    next: (response) => {
+                      this.loader.hide();
+                      let currentUrl = this.router.url;
+                      this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+                        this.router.navigate([currentUrl]);
+                      });
+                    },
+                    error: (error) => {
+                      this.loader.hide();
+                      console.error("Error adding user attendance:", error);
+                    }
+                  });
+              },
+              error: (error) => {
+                this.loader.hide();
+                console.error("Error adding user attendance:", error);
+              }
+            });
+        },
+        error: (error) => {
+          this.loader.hide();
+          this.attendanceError = true;
+          setTimeout(() => {
+            this.attendanceError = false;
+          }, 2000);
+          console.error("Error calling attendance API:", error);
+        }
+      });
+  }
+
+  cancelAttendance() {
+    this.dialogRef2.close();
+  }
+
+  ngOnDestroy() {
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
+  }
+
+  dateChanged(event: MatDatepickerInputEvent<Date>) {
+    this.selectedDate = event.value;
+    if (this.selectedDate) {
+      const dayOfWeek = this.selectedDate.getDay();
+      const dayName = this.days[dayOfWeek];
+
+      if (dayName === 'Friday') {
+        this.options = ['Work From Home - Friday', 'Work From Office - Friday', 'Leave', 'Public Holiday'];
+      } else {
+        this.options = ['Work From Office', 'Work From Home', 'Leave', 'Public Holiday']
+      }
+    } else {
+    }
+  }
+
+  categoryAttendance(attendance: string) {
+    this.api.getCategoryAttendance(this.email, "Q" + this.currentQuarter, this.currentYear.toString(), attendance
+    ).subscribe({
+      next: (response) => {
+        this.detailedArray = response;
+        this.loader.hide();
+      },
+      error: (error) => {
+        this.loader.hide();
+      }
+    });
+
+    this.popUpTitle = attendance + ' For ' + 'Q' + this.currentQuarter + ' ' + this.currentYear
+    this.detailedAttendancePopup = this.dialog.open(this.detailedAttendance, {
+      panelClass: 'custom-dialog-container',
+      disableClose: true,
+      width: '500px'
+    });
+  }
+
+  sortAscending: boolean = false;
+
+  sortData() {
+    this.sortAscending = !this.sortAscending;
+    this.detailedArray.sort((a, b) => {
+      if (this.sortAscending) {
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      } else {
+        return new Date(a.date).getTime() - new Date(b.date).getTime();
+      }
+    });
+  }
+
+  loadDistinctYears(): Promise<void> {
+    return new Promise((resolve) => {
+      const observer = {
+        next: (data: string[]) => this.distinctYears = data,
+        error: (err: any) => console.error('Error fetching distinct years', err),
+        complete: () => console.log('Fetching distinct years completed')
+      };
+      this.api.distinctYear().subscribe(observer);
+      resolve();
+    });
+  }
+
+  loadDistinctQuarters(): Promise<void> {
+    return new Promise((resolve) => {
+      const observer = {
+        next: (data: string[]) => this.distinctQuarters = data,
+        error: (err: any) => console.error('Error fetching distinct quarters', err),
+        complete: () => console.log('Fetching distinct quarters completed')
+      };
+      this.api.distinctQuarter().subscribe(observer);
+      resolve();
+    });
+  }
+}

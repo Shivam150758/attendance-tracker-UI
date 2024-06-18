@@ -1,0 +1,227 @@
+<div class="main-container">
+    <app-loader></app-loader>
+    <app-header></app-header>
+    <div class="content-wrapper">
+        <app-sidenav></app-sidenav>
+        <div class="content">
+            <div class="dropdowns">
+                <div class="form-field">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Year</mat-label>
+                        <mat-select [(ngModel)]="selectedYear" (selectionChange)="getUserAttendance()">
+                            <mat-option *ngFor="let year of distinctYears" [value]="year">{{year}}</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                    <mat-form-field class="dropdown" appearance="outline">
+                        <mat-label>Quarter</mat-label>
+                        <mat-select [(ngModel)]="selectedQuarter" (selectionChange)="getUserAttendance()">
+                            <mat-option *ngFor="let qtr of distinctQuarters" [value]="qtr">{{qtr}}</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+                <div class="buttons">
+                    <button mat-raised-button color="primary" (click)="openDialog()">Mark Attendance</button>
+                </div>
+            </div>
+            <table>
+                <tr>
+                    <td>
+                        <div class="card">
+                            <div class="header pointer" (click)="categoryAttendance('Work From Home')">
+                                <span>Work From Home</span>
+                            </div>
+                            <div class="footer">
+                                <div>
+                                    <div class="progress">
+                                        <div class="progress-bar progress-bar-striped" role="progressbar" [ngStyle]="{
+                                            'width': (number / 13 * 100) + '%',
+                                            'background-color': number <= 8 ? 'green' :
+                                                               number > 8 && number <= 12 ? 'rgb(204, 204, 0)' :
+                                                               'red'
+                                          }" [attr.aria-valuenow]="number" aria-valuemin="0" aria-valuemax="13">
+                                            {{ number }}
+                                        </div>
+                                    </div>
+                                    <table class="internalTable">
+                                        <tr class="internalTableRow">
+                                            <td class="internalTableHead">Availed</td>
+                                            <td class="internalTableHead">Remaining</td>
+                                        </tr>
+                                        <tr class="">
+                                            <td class="internalTableData" [ngStyle]="{
+                                                'color': number <= 8 ? 'green' :
+                                                         number > 8 && number <= 12 ? 'rgb(204, 204, 0)' :
+                                                         'red'
+                                              }">{{ number }}</td>
+                                            <td class="internalTableData">{{remaining}}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="card">
+                            <div class="header pointer" (click)="categoryAttendance('Work From Office')">
+                                <span>Work From Office</span>
+                            </div>
+                            <div class="footer">
+                                <div class="singleCard">
+                                    <span class="internalTableData">{{ attendanceData.wfo }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="card">
+                            <div class="header">
+                                <span>Leaves/ Public Holiday</span>
+                            </div>
+                            <div class="footer">
+                                <table class="internalTable" style="margin-left: 20px;">
+                                    <tr class="internalTableRow">
+                                        <td class="internalTableHead pointer" (click)="categoryAttendance('Leave')">
+                                            Leaves</td>
+                                        <td class="internalTableHead pointer"
+                                            (click)="categoryAttendance('Public Holiday')">Public Holiday</td>
+                                    </tr>
+                                    <tr class="">
+                                        <td class="internalTableData">{{ attendanceData.leaves }}</td>
+                                        <td class="internalTableData">{{ attendanceData.holidays }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="card">
+                            <div class="header pointer" (click)="categoryAttendance('Work From Home - Friday')">
+                                <span>WFH (Fridays)</span>
+                            </div>
+                            <div class="footer">
+                                <div class="singleCard">
+                                    <span class="internalTableData">{{ attendanceData.wfhFriday }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="card">
+                            <div class="header pointer" (click)="categoryAttendance('Work From Office - Friday')">
+                                <span>WFO (Fridays)</span>
+                            </div>
+                            <div class="footer">
+                                <div class="singleCard">
+                                    <span class="internalTableData">{{ attendanceData.wfoFriday }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="card">
+                            <div class="header">
+                                <span>Shift Allowance</span>
+                            </div>
+                            <div class="footer">
+                                <table class="allowanceTable">
+                                    <tr *ngFor="let month of months">
+                                        <th>{{ month }} {{selectedYear}}</th>
+                                        <td>3000</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+            <div *ngIf="attendanceSuccess" class="alert alert-success center-bottom-alert" role="alert">
+                Attendance Recorded Successfully
+            </div>
+            <div *ngIf="attendanceError" class="alert alert-danger center-bottom-alert" role="alert">
+                Attendance already recorded for the selected date
+            </div>
+        </div>
+    </div>
+</div>
+
+<ng-template #dialogTemplate>
+    <span mat-dialog-title class="popUpTitle" style="background-color: #5D54A4; color: white;">Attendance Marking for
+        Q{{currentQuarter}} {{ currentYear }}</span>
+    <mat-dialog-content class="dialogContent">
+        <div class="form-row">
+            <mat-form-field class="example-full-width" appearance="outline">
+                <mat-label>Choose a date</mat-label>
+                <input matInput [matDatepicker]="picker" (dateChange)="dateChanged($event)">
+                <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+            </mat-form-field>
+
+            <mat-form-field class="example-full-width" appearance="outline">
+                <mat-label>Choose an option</mat-label>
+                <mat-select [(ngModel)]="selectedAttendance" [disabled]="!selectedDate">
+                    <ng-container *ngFor="let option of options">
+                        <mat-option [value]="option">{{ option }}</mat-option>
+                    </ng-container>
+                </mat-select>
+            </mat-form-field>
+        </div>
+        <div class="info-row">
+            <p *ngIf="selectedDate">Selected Date: <strong>{{ selectedDate | date: 'dd MMMM yyyy' }}</strong></p>
+            <p *ngIf="selectedAttendance">Selected Option: <strong>{{selectedAttendance}}</strong></p>
+        </div>
+        <hr>
+        <button mat-raised-button color="warn" mat-dialog-close class="popupButton">Close</button>
+        <button mat-raised-button color="primary" [disabled]="!selectedDate || !selectedAttendance" class="popupButton"
+            (click)="openDialog2()">Save</button>
+    </mat-dialog-content>
+</ng-template>
+
+<ng-template #confirmationPopUp>
+    <span mat-dialog-title class="popUpTitle" style="background-color: #5D54A4; color: white;">Attendance Marking for {{
+        selectedDate | date: 'dd MMMM yyyy'
+        }}</span>
+    <mat-dialog-content class="dialogContent">
+        <div class="form-row">
+            <span>
+                Date: {{ selectedDate | date: 'dd MMMM yyyy' }} <br>
+                Attendance: {{selectedAttendance}}
+                <br><br>
+                <strong>Please make sure the above values are correct</strong>
+            </span>
+        </div>
+        <hr>
+        <button mat-raised-button color="warn" class="popupButton" (click)="cancelAttendance()">Cancel</button>
+        <button mat-raised-button color="primary" [disabled]="!selectedDate || !selectedAttendance" class="popupButton"
+            (click)="confirmAttendance()">Confirm</button>
+    </mat-dialog-content>
+</ng-template>
+
+<ng-template #detailedAttendance>
+    <div mat-dialog-title class="popUpTitle2">{{ popUpTitle }}</div>
+    <div mat-dialog-content class="popUpContent">
+        <div class="scrollable-content">
+            <table class="table-container">
+                <thead>
+                    <tr>
+                        <th class="detailTableHeader2" (click)="sortData()">Date
+                            <span *ngIf="sortAscending">&#9650;</span>
+                            <span *ngIf="!sortAscending">&#9660;</span>
+                        </th>
+                        <th class="detailTableHeader2">Attendance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let item of detailedArray">
+                        <td class="detailTableFields2">{{ item.date | date: 'dd MMMM yyyy' }}</td>
+                        <td class="detailTableFields2">{{ item.attendance }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div mat-dialog-actions>
+        <button mat-raised-button color="warn" mat-dialog-close class="popupButton2">Close</button>
+    </div>
+</ng-template>

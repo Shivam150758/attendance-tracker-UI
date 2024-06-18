@@ -1,0 +1,27 @@
+.main-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow-y: hidden;
+}
+
+.content-wrapper {
+    display: flex;
+    flex: 1;
+}
+
+.content {
+    flex: 1;
+    padding: 16px;
+}
+
+.buttonDiv {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tableTitle {
+    font-size: 18px;
+    font-weight: bold;
+}
