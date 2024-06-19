@@ -4,6 +4,12 @@
     <div class="content-wrapper">
         <app-sidenav></app-sidenav>
         <div class="content">
+            <div *ngIf="approvalSuccess" class="alert alert-success center-bottom-alert" role="alert">
+                Approval Request Submitted Successfully
+            </div>
+            <div *ngIf="approvalError" class="alert alert-danger center-bottom-alert" role="alert">
+                Approval Request already exist for the selected date
+            </div>
             <div class="dropdowns">
                 <div class="form-field">
                     <mat-form-field appearance="outline">
@@ -43,7 +49,7 @@
                         <tr *ngFor="let item of detailedAttendanceData">
                             <td class="detailTableFields2" style="padding: 10px;">{{ item.date }}</td>
                             <td class="detailTableFields2">{{ item.attendance }}</td>
-                            <td class="detailTableFields2"> Shift </td>
+                            <td class="detailTableFields2"> {{ item.shift }} </td>
                             <td class="detailTableFields2"> Shift </td>
                             <td class="detailTableFields2"> Shift </td>
                             <td class="detailTableFields2"> Shift </td>
@@ -80,15 +86,21 @@
             <mat-form-field appearance="outline" class="form-field">
                 <mat-label>Shift</mat-label>
                 <mat-select [(ngModel)]="popUpShift">
-                    <mat-option value="Morning">Morning</mat-option>
-                    <mat-option value="Afternoon">Afternoon</mat-option>
-                    <mat-option value="Night">Night</mat-option>
+                    <ng-container *ngFor="let option of shiftOptions">
+                        <mat-option [value]="option">{{ option }}</mat-option>
+                    </ng-container>
                 </mat-select>
             </mat-form-field>
         </div>
+
+        <mat-form-field class="inputWidth" appearance="outline">
+            <mat-label>Leave a comment</mat-label>
+            <textarea matInput [(ngModel)]="textComment"></textarea>
+        </mat-form-field>
     </div>
     <div mat-dialog-actions class="dialog-actions">
-        <button mat-raised-button color="primary" style="margin: 10px;">Send for Approval</button>
-        <button mat-raised-button color="warn" mat-dialog-close>Close</button>        
+        <button mat-raised-button color="primary" style="margin: 10px;" (click)="sendForApproval()">Send for
+            Approval</button>
+        <button mat-raised-button color="warn" mat-dialog-close>Close</button>
     </div>
 </ng-template>

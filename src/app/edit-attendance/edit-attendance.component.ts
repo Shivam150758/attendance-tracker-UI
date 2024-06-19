@@ -3,7 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import * as moment from 'moment';
 import { ApiCallingService } from 'src/service/API/api-calling.service';
 import { LoaderService } from 'src/service/Loader/loader.service';
-import { ThemePalette, provideNativeDateAdapter } from '@angular/material/core';
+import { provideNativeDateAdapter } from '@angular/material/core';
 
 @Component({
   selector: 'app-edit-attendance',
@@ -44,12 +44,21 @@ export class EditAttendanceComponent {
   sortColumn: string = '';
   sortAscending: boolean = true;
   options: any[] = [];
+  shiftOptions = ['Shift A', 'Shift B', 'Shift C', 'Shift D', 'Shift E', 'Shift F'];
+  textComment = '';
 
   @ViewChild('editDialog')
   editDialog!: TemplateRef<any>;
   popUpDate: any;
   popUpAttendance: any;
   popUpShift: any;
+  oldPopUpAttendance: any;
+  oldPopUpShift: any;
+  currentQuarter!: number;
+  managerId: any;
+  approvalSuccess!: boolean;
+  approvalError!: boolean;
+  dialogRef: any;
 
   constructor(private api: ApiCallingService, private loader: LoaderService, private dialog: MatDialog) {
   }
@@ -67,6 +76,7 @@ export class EditAttendanceComponent {
       let userData = JSON.parse(userDataString);
       this.username = userData.name;
       this.email = userData.emailId;
+      this.managerId = userData.managerId
       this.team = userData.team;
       this.openDetailedAttendance();
     }
@@ -76,6 +86,7 @@ export class EditAttendanceComponent {
     return new Promise((resolve) => {
       this.now = moment.tz('Asia/Kolkata');
       this.currentYear = this.now.year();
+      this.currentQuarter = this.now.quarter();
       this.currentMonth = this.now.month() + 1;
       this.time = this.now.format("DD-MMMM-YYYY HH:mm:ss");
       resolve();
@@ -157,23 +168,24 @@ export class EditAttendanceComponent {
   }
 
   openDialog(item: any): void {
+    this.textComment = "";
     this.popUpDate = this.parseDateString(item.date);
+
     let week = this.getDayOfWeek(this.popUpDate);
     this.popUpAttendance = item.attendance;
+    this.oldPopUpAttendance = this.popUpAttendance;
+
     this.popUpShift = item.shift;
+    this.oldPopUpShift = this.popUpShift;
     if (week === 'Friday') {
       this.options = ['Work From Home - Friday', 'Work From Office - Friday', 'Leave', 'Public Holiday'];
     } else {
-      this.options = ['Work From Office', 'Work From Home', 'Leave', 'Public Holiday']; // Correct assignment here
+      this.options = ['Work From Office', 'Work From Home', 'Leave', 'Public Holiday'];
     }
 
-    const dialogRef = this.dialog.open(this.editDialog, {
+    this.dialogRef = this.dialog.open(this.editDialog, {
       width: '950px',
     });
-  }
-
-
-  saveDialog(data: any): void {
   }
 
   parseDateString(dateString: string): Date {
@@ -185,6 +197,74 @@ export class EditAttendanceComponent {
   getDayOfWeek(date: Date): string {
     const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     return daysOfWeek[date.getDay()];
+  }
+
+  sendForApproval() {
+    let type;
+    if ((this.oldPopUpAttendance == this.popUpAttendance) && (this.oldPopUpShift == this.popUpShift)) {
+      type = "No Changes";
+    } else if ((this.oldPopUpAttendance != this.popUpAttendance) && (this.oldPopUpShift == this.popUpShift)) {
+      type = "Attendance Change";
+    } else if ((this.oldPopUpAttendance == this.popUpAttendance) && (this.oldPopUpShift != this.popUpShift)) {
+      type = "Shift Change";
+    } else if ((this.oldPopUpAttendance != this.popUpAttendance) && (this.oldPopUpShift != this.popUpShift)) {
+      type = "Attendance and Shift Changes";
+    }
+
+    const formattedDate = moment(this.popUpDate).format('DD-MMMM-YYYY');
+    const selDate = moment(this.popUpDate);
+    const year = selDate.year();
+    const quarter = selDate.quarter();
+    const month = selDate.month();
+
+    let approvalList = {
+      id: this.email + formattedDate,
+      date: formattedDate,
+      year: year.toString(),
+      quarter: "Q" + quarter,
+      month: (month + 1).toString(),
+      raisedBy: this.email,
+      raisedTo: this.managerId,
+      comments: this.textComment,
+      status: "Pending",
+      type: type,
+      prevAttendance: this.oldPopUpAttendance,
+      prevShift: this.oldPopUpShift,
+      newAttendance: this.popUpAttendance,
+      newShift: this.popUpShift
+    };
+
+    if (type == "No Changes") {
+
+    } else {
+      this.loader.show();
+      this.dialogRef.close();
+
+      this.api.sendForApproval(approvalList).subscribe({
+        next: (response) => {
+          console.log("API Called");
+          console.log(response, typeof (response));
+          if (response === "ApprovalList saved successfully.") {
+            this.approvalSuccess = true;
+            console.log(this.approvalSuccess);
+            setTimeout(() => {
+              this.approvalSuccess = false;
+            }, 3000);
+          } else if (response === "Error: ApprovalList with this ID already exists.") {
+            this.approvalError = true;
+            console.log(this.approvalError);
+            setTimeout(() => {
+              this.approvalError = false;
+            }, 3000);
+          }
+          this.loader.hide();
+        },
+        error: (error) => {
+          console.error("Error during API call:", error);
+          this.loader.hide();
+        }
+      });
+    }
   }
 
 }

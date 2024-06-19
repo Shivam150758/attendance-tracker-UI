@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -23,6 +23,8 @@ export class ApiCallingService {
   private resetPassword = 'http://localhost:8080/resetPassword';
   private userMonthlyAttendance = 'http://localhost:8080/userMonthlyAttendance';
   private subOrdinatesList = 'http://localhost:8080/subordinates';
+  private requestList = 'http://localhost:8080/requestApproval';
+  private sendRequest = 'http://localhost:8080/saveForApproval';
 
   constructor(private http: HttpClient) { }
 
@@ -88,5 +90,32 @@ export class ApiCallingService {
 
   getListofSubOrdinates(email: string) {
     return this.http.post(this.subOrdinatesList, { emailId: email });
+  }
+
+  getApprovalList(email: string) {
+    return this.http.post(this.requestList, { raisedBy: email, raisedTo: email })
+  }
+
+  sendForApproval(data: any) {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+
+    return this.http.post(this.sendRequest, {
+      id: data.id,
+      comments: data.comments,
+      date: data.date,
+      month: data.month,
+      newAttendance: data.newAttendance,
+      newShift: data.newShift,
+      prevAttendance: data.prevAttendance,
+      prevShift: data.prevShift,
+      quarter: data.quarter,
+      raisedBy: data.raisedBy,
+      raisedTo: data.raisedTo,
+      status: data.status,
+      type: data.type,
+      year: data.year
+    }, { headers, responseType: 'text' as 'json' });
   }
 }
