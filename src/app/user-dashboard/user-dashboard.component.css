@@ -105,8 +105,8 @@ td {
 }
 
 .popUpTitle2 {
-    font-size: 24px;
-    margin-bottom: 16px;
+    font-size: 20px;
+    margin-bottom: 10px;
 }
 
 .content {
@@ -289,5 +289,12 @@ td {
 
 .allowanceTable td,th {
     font-size: 22px;
+    padding: 15px;
+}
+
+.popupTableHeader {
+    font-size: 18px;
+    background-color: #5D54A4;
+    color: white;
     padding: 15px;
 }
