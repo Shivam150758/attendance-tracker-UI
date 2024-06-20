@@ -25,6 +25,7 @@ export class UserDashboardComponent {
   selectedDate: Date | null = null;
   selectedAttendance: any;
   options: any[] = [];
+  shiftOptions: any[] = ['Shift A', 'Shift B', 'Shift C', 'Shift D', 'Shift E'];
   number: number = 0;
   remaining: any = 0;
   days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -33,6 +34,8 @@ export class UserDashboardComponent {
   detailedAttendancePopup!: MatDialogRef<any>;
   username: any;
   team: any;
+  shift: any;
+  oldShift: any;
   attendanceData: any = {
     wfo: 0,
     leaves: 0,
@@ -70,6 +73,10 @@ export class UserDashboardComponent {
   attendanceSuccess: boolean = false;
   distinctYears: string[] = [];
   distinctQuarters: string[] = [];
+  formattedDate!: string;
+  managerId: any;
+  approvalSuccess: boolean = false;
+  approvalError: boolean = false;
 
   constructor(private loader: LoaderService, private router: Router, private sharedService: SharedService,
     private dialog: MatDialog, private api: ApiCallingService) {
@@ -95,6 +102,9 @@ export class UserDashboardComponent {
         this.username = userData.name;
         this.email = userData.emailId;
         this.team = userData.team;
+        this.shift = userData.shift;
+        this.managerId = userData.managerId;
+        this.oldShift = userData.shift;
         this.getUserAttendance();
       } else {
 
@@ -144,6 +154,7 @@ export class UserDashboardComponent {
   }
 
   openDialog() {
+    this.shift = this.oldShift
     this.selectedDate = null;
     this.selectedAttendance = null;
     this.dialogRef1 = this.dialog.open(this.dialogTemplate, {
@@ -179,14 +190,14 @@ export class UserDashboardComponent {
     this.dialogRef2.close('confirm');
     this.now = moment.tz('Asia/Kolkata');
     this.time = this.now.format("DD-MMMM-YYYY HH:mm:ss");
-    const formattedDate = moment(this.selectedDate).format('DD-MMMM-YYYY');
+    this.formattedDate = moment(this.selectedDate).format('DD-MMMM-YYYY');
     const selDate = moment(this.selectedDate);
     const year = selDate.year();
     const quarter = selDate.quarter();
     const month = selDate.month();
 
-    this.api.attendance(this.email, this.email, formattedDate, this.selectedAttendance, year.toString(),
-      "Q" + quarter, (month + 1).toString(), this.email, this.time.toString()).subscribe({
+    this.api.attendance(this.email, this.email, this.formattedDate, this.selectedAttendance, year.toString(),
+      "Q" + quarter, (month + 1).toString(), this.email, this.time.toString(), this.shift).subscribe({
         next: (response) => {
           this.api.addUserAttendance(this.email, this.email, this.selectedAttendance, year.toString(),
             "Q" + quarter, this.username).subscribe({
@@ -249,18 +260,30 @@ export class UserDashboardComponent {
   }
 
   categoryAttendance(attendance: string) {
-    this.api.getCategoryAttendance(this.email, "Q" + this.currentQuarter, this.currentYear.toString(), attendance
-    ).subscribe({
-      next: (response) => {
-        this.detailedArray = response;
-        this.loader.hide();
-      },
-      error: (error) => {
-        this.loader.hide();
-      }
-    });
+    if (attendance == 'All') {
+      this.api.getDetailedAttendanceQtr(this.email, this.selectedYear, this.selectedQuarter).subscribe({
+        next: (response) => {
+          this.detailedArray = response;
+          this.loader.hide();
+        },
+        error: (error) => {
+          this.loader.hide();
+        }
+      });
+    } else {
+      this.api.getCategoryAttendance(this.email, this.selectedQuarter, this.selectedYear, attendance
+      ).subscribe({
+        next: (response) => {
+          this.detailedArray = response;
+          this.loader.hide();
+        },
+        error: (error) => {
+          this.loader.hide();
+        }
+      });
+    }
 
-    this.popUpTitle = attendance + ' For ' + 'Q' + this.currentQuarter + ' ' + this.currentYear
+    this.popUpTitle = attendance + ' For ' + this.selectedQuarter + ' ' + this.selectedYear
     this.detailedAttendancePopup = this.dialog.open(this.detailedAttendance, {
       panelClass: 'custom-dialog-container',
       disableClose: true,
@@ -302,6 +325,58 @@ export class UserDashboardComponent {
       };
       this.api.distinctQuarter().subscribe(observer);
       resolve();
+    });
+  }
+
+  sendForApproval() {
+    let type;
+    if(this.oldShift != this.shift) {
+      type = "Extra WFH and Shift Change"
+    } else {
+      type = "Extra WFH"
+    }
+    const selDate = moment(this.selectedDate);
+    this.formattedDate = moment(this.selectedDate).format('DD-MMMM-YYYY');
+    const month = selDate.month();
+    let approvalList = {
+      id: this.email + this.formattedDate,
+      date: this.formattedDate,
+      year: this.selectedYear,
+      quarter: this.selectedQuarter,
+      month: (month + 1).toString(),
+      raisedBy: this.email,
+      name: this.username,
+      raisedTo: this.managerId,
+      comments: "",
+      status: "Pending",
+      type: type,
+      prevAttendance: "",
+      prevShift: this.oldShift,
+      newAttendance: this.selectedAttendance,
+      newShift: this.shift
+    };
+
+    this.loader.show();
+    this.dialogRef2.close('confirm');
+    this.api.sendForApproval(approvalList).subscribe({
+      next: (response) => {
+        if (response === "ApprovalList saved successfully.") {
+          this.approvalSuccess = true;
+          setTimeout(() => {
+            this.approvalSuccess = false;
+          }, 3000);
+        } else if (response === "Error: ApprovalList with this ID already exists.") {
+          this.approvalError = true;
+          setTimeout(() => {
+            this.approvalError = false;
+          }, 3000);
+        }
+        this.loader.hide();
+      },
+      error: (error) => {
+        console.error("Error during API call:", error);
+        this.loader.hide();
+      }
     });
   }
 }

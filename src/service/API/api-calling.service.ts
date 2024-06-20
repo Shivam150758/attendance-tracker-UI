@@ -12,6 +12,7 @@ export class ApiCallingService {
   private qtrLevelAttendance = 'http://localhost:8080/addUserAttendance';
   private userLevelAttendance = 'http://localhost:8080/getUserAttendance';
   private detailedAttendance = 'http://localhost:8080/detailedAttendance';
+  private detailedAttendanceQtr = 'http://localhost:8080/detailedAttendanceQtr';
   private attendanceCategory = 'http://localhost:8080/attendanceCategory';
   private allUsers = 'http://localhost:8080/allUsers';
   private downloadQtrAttendace = 'http://localhost:8080/adminQtrReport';
@@ -25,6 +26,7 @@ export class ApiCallingService {
   private subOrdinatesList = 'http://localhost:8080/subordinates';
   private requestList = 'http://localhost:8080/requestApproval';
   private sendRequest = 'http://localhost:8080/saveForApproval';
+  private updateAttendance = 'http://localhost:8080/updateAttendance';
 
   constructor(private http: HttpClient) { }
 
@@ -36,8 +38,8 @@ export class ApiCallingService {
     return this.http.post(this.resetPassword, { emailId: email, password: password });
   }
 
-  attendance(Id: string, email: string, date: string, atte: string, year: string, qtr: string, mth: string, lub: string, luo: string): Observable<any> {
-    return this.http.post(this.markAttendance, { id: Id + date, emailId: email, date: date, attendance: atte, year: year, quarter: qtr, month: mth, lastUpdatedBy: lub, lastUpdatedOn: luo });
+  attendance(Id: string, email: string, date: string, atte: string, year: string, qtr: string, mth: string, lub: string, luo: string, shift: string): Observable<any> {
+    return this.http.post(this.markAttendance, { id: Id + date, emailId: email, date: date, attendance: atte, year: year, quarter: qtr, month: mth, shift: shift, lastUpdatedBy: lub, lastUpdatedOn: luo });
   }
 
   addUserAttendance(Id: string, email: string, attendance: string, year: string, quarter: string, name: string): Observable<any> {
@@ -50,6 +52,10 @@ export class ApiCallingService {
 
   getDetailedAttendance(email: string, year: string, qtr: string, month: string): Observable<any> {
     return this.http.post(this.detailedAttendance, { emailId: email, month: month, quarter: qtr, year: year });
+  }
+
+  getDetailedAttendanceQtr(email: string, year: string, qtr: string): Observable<any> {
+    return this.http.post(this.detailedAttendanceQtr, { emailId: email, quarter: qtr, year: year });
   }
 
   getCategoryAttendance(email: string, qtr: string, year: string, attendance: string): Observable<any> {
@@ -102,7 +108,32 @@ export class ApiCallingService {
     });
 
     return this.http.post(this.sendRequest, {
-      id: data.id,
+      name: data.name,
+      comments: data.comments,
+      date: data.date,
+      month: data.month,
+      newAttendance: data.newAttendance,
+      newShift: data.newShift,
+      prevAttendance: data.prevAttendance,
+      prevShift: data.prevShift,
+      quarter: data.quarter,
+      raisedBy: data.raisedBy,
+      raisedTo: data.raisedTo,
+      status: data.status,
+      type: data.type,
+      year: data.year
+    }, { headers, responseType: 'text' as 'json' });
+  }
+
+  updateAttendanceApproval(data: any) {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+
+    console.log(data)
+    return this.http.post(this.updateAttendance, {
+      id: data._id,
+      name: data.name,
       comments: data.comments,
       date: data.date,
       month: data.month,

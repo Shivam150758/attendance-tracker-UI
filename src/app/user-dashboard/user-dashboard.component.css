@@ -159,7 +159,7 @@ td {
 }
 
 .dialogContent .example-full-width {
-    width: 49%;
+    width: 32%;
     margin-top: 15px;
 }
 
@@ -297,4 +297,20 @@ td {
     background-color: #5D54A4;
     color: white;
     padding: 15px;
+}
+
+.approvalMessage {
+    color: red;
+}
+
+.center-bottom-alert {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    width: auto;
+    max-width: 80%;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }

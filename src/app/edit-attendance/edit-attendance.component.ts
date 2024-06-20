@@ -224,6 +224,7 @@ export class EditAttendanceComponent {
       quarter: "Q" + quarter,
       month: (month + 1).toString(),
       raisedBy: this.email,
+      name: this.username,
       raisedTo: this.managerId,
       comments: this.textComment,
       status: "Pending",
@@ -242,17 +243,13 @@ export class EditAttendanceComponent {
 
       this.api.sendForApproval(approvalList).subscribe({
         next: (response) => {
-          console.log("API Called");
-          console.log(response, typeof (response));
           if (response === "ApprovalList saved successfully.") {
             this.approvalSuccess = true;
-            console.log(this.approvalSuccess);
             setTimeout(() => {
               this.approvalSuccess = false;
             }, 3000);
           } else if (response === "Error: ApprovalList with this ID already exists.") {
             this.approvalError = true;
-            console.log(this.approvalError);
             setTimeout(() => {
               this.approvalError = false;
             }, 3000);
@@ -266,5 +263,4 @@ export class EditAttendanceComponent {
       });
     }
   }
-
 }

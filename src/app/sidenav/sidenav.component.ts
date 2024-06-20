@@ -1,8 +1,14 @@
+import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { Observable } from 'rxjs';
 import { ApiCallingService } from 'src/service/API/api-calling.service';
 import { SharedService } from 'src/service/EventEmitter/shared.service';
 import { LoaderService } from 'src/service/Loader/loader.service';
+
+interface ApprovalListResponse {
+  raisedByList: any[];
+  raisedToList: any[];
+}
 
 @Component({
   selector: 'app-sidenav',
@@ -14,9 +20,12 @@ export class SidenavComponent {
   email: any;
   detailedArray: any;
   admin: boolean = false;
-  constructor(private loader: LoaderService, private sharedService: SharedService, private api: ApiCallingService) {
+  raisedByList!: any[];
+  raisedToList!: any[];
+  badgeCount: any;
 
-  }
+  constructor(private loader: LoaderService, private sharedService: SharedService, 
+    private api: ApiCallingService, private http: HttpClient ) {  }
 
   async ngOnInit() {
     this.loader.show();
@@ -40,6 +49,29 @@ export class SidenavComponent {
         this.loader.hide();
       }
     });
+    this.badgeCount = 0;
+    await this.getApprovalList(this.email).subscribe(
+      (response: ApprovalListResponse) => {
+        this.raisedByList = response.raisedByList;
+        this.raisedToList = response.raisedToList;
+        this.raisedToList.forEach(element => {
+          if(element.status == 'Pending') {
+            this.badgeCount++;
+          }
+        });
+        this.loader.hide();
+      },
+      (error: any) => {
+        console.error("Error fetching approval list:", error);
+        this.loader.hide();
+      }
+    );
+  }
+
+  getApprovalList(emailId: string): Observable<ApprovalListResponse> {
+    const apiUrl = 'http://localhost:8080/requestApproval';
+    const payload = { raisedBy: emailId, raisedTo: emailId };
+    return this.http.post<ApprovalListResponse>(apiUrl, payload);
   }
 
   onButtonClick(data: any): void {

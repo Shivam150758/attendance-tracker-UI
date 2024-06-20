@@ -30,6 +30,7 @@ import { AdminPanelComponent } from './admin-panel/admin-panel.component';
 import { ResetPasswordComponent } from './reset-password/reset-password.component';
 import { EditAttendanceComponent } from './edit-attendance/edit-attendance.component';
 import { RequestStatusComponent } from './request-status/request-status.component';
+import { MatBadgeModule } from '@angular/material/badge';
 
 const routes: Routes = [
   { path: '', component: LoginPageComponent },
@@ -74,7 +75,8 @@ const routes: Routes = [
     MatInputModule,
     MatFormFieldModule,
     MatSelectModule,
-    MatTableModule
+    MatTableModule,
+    MatBadgeModule
   ],
   providers: [provideCharts(withDefaultRegisterables())],
   bootstrap: [AppComponent]
