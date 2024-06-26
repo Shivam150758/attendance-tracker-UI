@@ -53,8 +53,12 @@
                                     <td class="detailTableFields2">{{item.status}}</td>
                                     <td class="detailTableFields2">{{item.type}}</td>
                                     <td class="detailTableFields2">
-                                        <mat-icon style="cursor: pointer;"
-                                            (click)="openReqDetails(item)">cancel</mat-icon>
+                                        <mat-icon *ngIf="item.status == 'Pending'" style="cursor: pointer;"
+                                            (click)="openReqDetails(item)">cancel
+                                        </mat-icon>
+                                        <mat-icon *ngIf="item.status != 'Pending'" style="cursor: pointer;"
+                                            (click)="openReqDetails(item)">visibility
+                                        </mat-icon>
                                     </td>
                                 </tr>
                             </tbody>

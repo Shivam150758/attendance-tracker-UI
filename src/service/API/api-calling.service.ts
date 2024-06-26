@@ -1,32 +1,36 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from 'src/environments/environment.prod';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiCallingService {
 
-  private loginUrl = 'http://localhost:8080/login';
-  private markAttendance = 'http://localhost:8080/addAttendance';
-  private qtrLevelAttendance = 'http://localhost:8080/addUserAttendance';
-  private userLevelAttendance = 'http://localhost:8080/getUserAttendance';
-  private detailedAttendance = 'http://localhost:8080/detailedAttendance';
-  private detailedAttendanceQtr = 'http://localhost:8080/detailedAttendanceQtr';
-  private attendanceCategory = 'http://localhost:8080/attendanceCategory';
-  private allUsers = 'http://localhost:8080/allUsers';
-  private downloadQtrAttendace = 'http://localhost:8080/adminQtrReport';
-  private downloadMthAttendace = 'http://localhost:8080/adminMthReport';
-  private distinctYears = 'http://localhost:8080/distinctYears';
-  private distinctQtr = 'http://localhost:8080/distinctQuarters';
-  private distinctMonth = 'http://localhost:8080/distinctMonths';
-  private adminMonthlyAttendance = 'http://localhost:8080/addMonthlyAttendance';
-  private resetPassword = 'http://localhost:8080/resetPassword';
-  private userMonthlyAttendance = 'http://localhost:8080/userMonthlyAttendance';
-  private subOrdinatesList = 'http://localhost:8080/subordinates';
-  private requestList = 'http://localhost:8080/requestApproval';
-  private sendRequest = 'http://localhost:8080/saveForApproval';
-  private updateAttendance = 'http://localhost:8080/updateAttendance';
+  private baseUrl = environment.apiUrl;
+
+  private loginUrl = `${this.baseUrl}/login`;
+  private markAttendance = `${this.baseUrl}/addAttendance`;
+  private qtrLevelAttendance = `${this.baseUrl}/addUserAttendance`;
+  private userLevelAttendance = `${this.baseUrl}/getUserAttendance`;
+  private detailedAttendance = `${this.baseUrl}/detailedAttendance`;
+  private detailedAttendanceQtr = `${this.baseUrl}/detailedAttendanceQtr`;
+  private attendanceCategory = `${this.baseUrl}/attendanceCategory`;
+  private allUsers = `${this.baseUrl}/allUsers`;
+  private downloadQtrAttendace = `${this.baseUrl}/adminQtrReport`;
+  private downloadMthAttendace = `${this.baseUrl}/adminMthReport`;
+  private distinctYears = `${this.baseUrl}/distinctYears`;
+  private distinctQtr = `${this.baseUrl}/distinctQuarters`;
+  private distinctMonth = `${this.baseUrl}/distinctMonths`;
+  private adminMonthlyAttendance = `${this.baseUrl}/addMonthlyAttendance`;
+  private resetPassword = `${this.baseUrl}/resetPassword`;
+  private userMonthlyAttendance = `${this.baseUrl}/userMonthlyAttendance`;
+  private subOrdinatesList = `${this.baseUrl}/subordinates`;
+  private requestList = `${this.baseUrl}/requestApproval`;
+  private sendRequest = `${this.baseUrl}/saveForApproval`;
+  private updateAttendance = `${this.baseUrl}/updateAttendance`;
+  private checkAttendance = `${this.baseUrl}/checkAttendance`;
 
   constructor(private http: HttpClient) { }
 
@@ -148,5 +152,9 @@ export class ApiCallingService {
       type: data.type,
       year: data.year
     }, { headers, responseType: 'text' as 'json' });
+  }
+
+  checkAttendanceDuplicate(Id: string, date: string): Observable<any> {
+    return this.http.post(this.checkAttendance, { id: Id + date });
   }
 }

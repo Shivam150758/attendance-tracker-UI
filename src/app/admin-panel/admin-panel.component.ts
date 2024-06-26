@@ -64,6 +64,7 @@ export class AdminPanelComponent {
   sortedColumn: string = 'wfh';
   sortAscending: boolean = true;
   dialogRef1!: MatDialogRef<any>;
+  dialogRef!: MatDialogRef<any>;
 
   async ngOnInit() {
     this.loader.show();
@@ -80,6 +81,10 @@ export class AdminPanelComponent {
     this.selectedMonth = this.currentMonth.toString();
     this.loader.show();
     this.loader.show();
+    this.getData();
+  }
+
+  getData() {
     this.api.downloadMonthlyAdminReport(this.selectedMonth, this.selectedYear).subscribe({
       next: (attendanceResponse) => {
         if (attendanceResponse) {
@@ -173,7 +178,7 @@ export class AdminPanelComponent {
         this.loader.hide();
       }
     });
-    this.dialog.open(this.userDetailsPopup, {
+    this.dialogRef = this.dialog.open(this.userDetailsPopup, {
       panelClass: 'custom-dialog-container',
       disableClose: true,
       width: '800px'

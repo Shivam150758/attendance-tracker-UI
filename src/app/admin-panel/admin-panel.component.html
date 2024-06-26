@@ -9,6 +9,23 @@
                 <button class="matButton" mat-raised-button color="primary"
                     (click)="downloadReportPopUp()"><mat-icon>get_app</mat-icon>Download Report</button>
             </div>
+            <!-- <div class="dropdowns">
+                <div class="form-field">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Year</mat-label>
+                        <mat-select [(ngModel)]="selectedYear" (selectionChange)="getData()">
+                            <mat-option *ngFor="let year of distinctYears" [value]="year">{{year}}</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                    <mat-form-field class="dropdown" appearance="outline">
+                        <mat-label>Month</mat-label>
+                        <mat-select [(ngModel)]="selectedMonth" (selectionChange)="getData()">
+                            <mat-option *ngFor="let month of distinctMonths"
+                                [value]="month">{{monthNames[month]}}</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+            </div> -->
             <div style="border: 1px solid black;" class="table-container">
                 <table>
                     <thead>
@@ -85,55 +102,65 @@
 </div>
 
 <ng-template #userDetails>
+    <div mat-dialog-title class="popUpTitle2">
+        <span style="color: white;">User Details</span>
+    </div>
     <div mat-dialog-content class="content">
-        <div class="popUpTitle">
-            <strong><span class="attendanceHeader"> User Details</span></strong>
-            <button mat-icon-button mat-dialog-close class="closeButton">
-                <mat-icon>close</mat-icon>
-            </button>
-        </div>
-
-        <table style="width: 100%;">
-            <tr>
-                <td><strong>Username: </strong>{{username}}</td>
-                <td><strong>EmailId: </strong>{{emailId}}</td>
-            </tr>
-            <tr>
-                <td><strong>Team: </strong>{{team}}</td>
-                <td><strong>Last Login: </strong>{{lastlogin | date: 'dd MMMM yyyy HH:mm'}}</td>
-            </tr>
-        </table>
-        <hr>
-        <div style="margin-top: 20px;">
-            <div class="popUpTitle">
-                <span class="attendanceHeader">
-                    <strong>Attendance for {{attendanceData.quarter}} {{attendanceData.year}}</strong>
-                </span>
+        <div class="details-row">
+            <div class="details-item">
+                <strong>Username: </strong><span>{{username}}</span>
             </div>
-            <table style="width: 100%;">
-                <tr>
-                    <td><strong>WFH: </strong>{{attendanceData.wfh}}</td>
-                    <td><strong>WFO: </strong>{{attendanceData.wfo}}</td>
-                </tr>
-                <tr>
-                    <td><strong>Leaves: </strong>{{attendanceData.leaves}}</td>
-                    <td><strong>Public Holiday: </strong>{{attendanceData.holidays}}</td>
-                </tr>
-                <tr>
-                    <td><strong>WFH - Friday: </strong>{{attendanceData.wfhFriday}}</td>
-                    <td><strong>WFO - Friday: </strong>{{attendanceData.wfoFriday}}</td>
-                </tr>
-            </table>
+            <div class="details-item">
+                <strong>EmailId: </strong><span>{{emailId}}</span>
+            </div>
+        </div>
+        <div class="details-row">
+            <div class="details-item">
+                <strong>Team: </strong><span>{{team}}</span>
+            </div>
+            <div class="details-item">
+                <strong>Last Login: </strong><span>{{lastlogin | date: 'dd MMMM yyyy HH:mm'}}</span>
+            </div>
+        </div>
+        <hr>
+        <div class="attendance-section">
+            <div class="attendance-header">
+                <strong>Attendance for {{attendanceData.quarter}} {{attendanceData.year}}</strong>
+            </div>
+            <div class="details-row">
+                <div class="details-item">
+                    <strong>WFH: </strong><span>{{attendanceData.wfh}}</span>
+                </div>
+                <div class="details-item">
+                    <strong>WFO: </strong><span>{{attendanceData.wfo}}</span>
+                </div>
+            </div>
+            <div class="details-row">
+                <div class="details-item">
+                    <strong>Leaves: </strong><span>{{attendanceData.leaves}}</span>
+                </div>
+                <div class="details-item">
+                    <strong>Public Holiday: </strong><span>{{attendanceData.holidays}}</span>
+                </div>
+            </div>
+            <div class="details-row">
+                <div class="details-item">
+                    <strong>WFH - Friday: </strong><span>{{attendanceData.wfhFriday}}</span>
+                </div>
+                <div class="details-item">
+                    <strong>WFO - Friday: </strong><span>{{attendanceData.wfoFriday}}</span>
+                </div>
+            </div>
         </div>
     </div>
     <div mat-dialog-actions class="dialogActions">
-        <button mat-raised-button color="warn" mat-dialog-close class="popupButton2">Close</button>
+        <button mat-dialog-close class="popupButton2" mat-raised-button color="warn">Close</button>
     </div>
 </ng-template>
 
 <ng-template #downloadAttendanceReport>
-    <div mat-dialog-title class="popUpTitle2">Download Attendance Report</div>
-    <hr>
+    <div mat-dialog-title class="popUpTitle2" style="background-color: #5D54A4; color: white; margin-bottom: 20px;">
+        Download Attendance Report</div>
     <div mat-dialog-content>
         <div class="radio-container">
             <mat-radio-group color="primary" aria-label="Select an option" [(ngModel)]="selectedRadio">
@@ -167,7 +194,8 @@
                 <mat-form-field>
                     <mat-label>Month</mat-label>
                     <mat-select [(ngModel)]="selectedMonth">
-                        <mat-option *ngFor="let month of distinctMonths" [value]="month">{{monthNames[month]}}</mat-option>
+                        <mat-option *ngFor="let month of distinctMonths"
+                            [value]="month">{{monthNames[month]}}</mat-option>
                     </mat-select>
                 </mat-form-field>
             </div>

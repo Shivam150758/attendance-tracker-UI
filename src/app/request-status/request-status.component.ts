@@ -4,6 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import * as moment from 'moment';
 import { Observable } from 'rxjs';
+import { environment } from 'src/environments/environment.prod';
 import { ApiCallingService } from 'src/service/API/api-calling.service';
 import { LoaderService } from 'src/service/Loader/loader.service';
 
@@ -57,7 +58,8 @@ export class RequestStatusComponent {
   }
 
   getApprovalList(emailId: string): Observable<ApprovalListResponse> {
-    const apiUrl = 'http://localhost:8080/requestApproval';
+    let baseUrl = environment.apiUrl;
+    let apiUrl = `${baseUrl}/requestApproval`;
     const payload = { raisedBy: emailId, raisedTo: emailId };
     return this.http.post<ApprovalListResponse>(apiUrl, payload);
   }

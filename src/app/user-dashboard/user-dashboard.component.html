@@ -28,7 +28,7 @@
                 <div class="buttons">
                     <button mat-raised-button color="primary" (click)="openDialog()" style="margin-right: 10px;">Mark
                         Attendance</button>
-                    <button type="button" class="btn btn-warning" (click)="categoryAttendance('All')">Attendance
+                    <button type="button" class="btn btn-warning" (click)="categoryAttendance('Attendance')">Attendance
                         Details</button>
                 </div>
             </div>
@@ -128,7 +128,7 @@
                             </div>
                         </div>
                     </td>
-                    <td>
+                    <!-- <td>
                         <div class="card">
                             <div class="header">
                                 <span>Shift Allowance</span>
@@ -142,7 +142,7 @@
                                 </table>
                             </div>
                         </div>
-                    </td>
+                    </td> -->
                 </tr>
             </table>
             <div *ngIf="attendanceSuccess" class="alert alert-success center-bottom-alert" role="alert">
@@ -162,10 +162,10 @@
         <div class="form-row">
             <mat-form-field class="example-full-width" appearance="outline">
                 <mat-label>Select date</mat-label>
-                <input matInput [matDatepicker]="picker" (dateChange)="dateChanged($event)">
+                <input matInput [matDatepicker]="picker" [matDatepickerFilter]="myFilter" (dateChange)="dateChanged($event)">
                 <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
                 <mat-datepicker #picker></mat-datepicker>
-            </mat-form-field>
+            </mat-form-field>            
 
             <mat-form-field class="example-full-width" appearance="outline">
                 <mat-label>Select Attendance</mat-label>
@@ -204,22 +204,29 @@
         <div class="form-row">
             <span>
                 Date: {{ selectedDate | date: 'dd MMMM yyyy' }} <br>
-                Attendance: {{selectedAttendance}}
+                Attendance: {{selectedAttendance}} <br>
+                Shift: {{shift}}
                 <br><br>
                 <strong>Please make sure the above values are correct</strong>
-                <strong class="approvalMessage" *ngIf="number > 12 && selectedAttendance == 'Work From Home'">
+                <strong class="approvalMessage" *ngIf="(number > 12 && selectedAttendance == 'Work From Home')">
                     <br><br>
                     Your current WFH in {{ selectedQuarter }} is {{ number }} hence this attendance
+                    needs manager's approval
+                </strong>
+
+                <strong class="approvalMessage" *ngIf="oldShift != shift">
+                    <br><br>
+                    Your seleted shift is not matching with your default shift hence this attendance
                     needs manager's approval
                 </strong>
             </span>
         </div>
         <hr>
         <button mat-raised-button color="warn" class="popupButton" (click)="cancelAttendance()">Cancel</button>
-        <button mat-raised-button *ngIf="!(number > 12 && selectedAttendance == 'Work From Home')" color="primary"
+        <button mat-raised-button *ngIf="!((number > 12 && selectedAttendance == 'Work From Home') || (oldShift != shift))" color="primary"
             [disabled]="!selectedDate || !selectedAttendance" class="popupButton"
             (click)="confirmAttendance()">Confirm</button>
-        <button class="popupButton" *ngIf="number > 12 && selectedAttendance == 'Work From Home'" 
+        <button class="popupButton" *ngIf="((number > 12 && selectedAttendance == 'Work From Home') || (oldShift != shift))" 
             mat-raised-button color="primary" (click)="sendForApproval()">Send for Approval</button>
     </mat-dialog-content>
 </ng-template>
@@ -236,12 +243,14 @@
                             <span *ngIf="!sortAscending">&#9660;</span>
                         </td>
                         <td class="popupTableHeader">Attendance</td>
+                        <td class="popupTableHeader">Shift</td>  
                     </tr>
                 </thead>
                 <tbody>
                     <tr *ngFor="let item of detailedArray">
                         <td class="detailTableFields2">{{ item.date | date: 'dd MMMM yyyy' }}</td>
                         <td class="detailTableFields2">{{ item.attendance }}</td>
+                        <td class="detailTableFields2">{{ item.shift }}</td>
                     </tr>
                 </tbody>
             </table>

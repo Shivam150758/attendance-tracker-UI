@@ -244,6 +244,12 @@ export class UserDashboardComponent {
     }
   }
 
+  myFilter = (d: Date | null): boolean => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return d ? d <= today : false;
+  };
+
   dateChanged(event: MatDatepickerInputEvent<Date>) {
     this.selectedDate = event.value;
     if (this.selectedDate) {
@@ -260,7 +266,7 @@ export class UserDashboardComponent {
   }
 
   categoryAttendance(attendance: string) {
-    if (attendance == 'All') {
+    if (attendance == 'Attendance') {
       this.api.getDetailedAttendanceQtr(this.email, this.selectedYear, this.selectedQuarter).subscribe({
         next: (response) => {
           this.detailedArray = response;
@@ -329,15 +335,20 @@ export class UserDashboardComponent {
   }
 
   sendForApproval() {
-    let type;
-    if(this.oldShift != this.shift) {
-      type = "Extra WFH and Shift Change"
-    } else {
-      type = "Extra WFH"
-    }
     const selDate = moment(this.selectedDate);
     this.formattedDate = moment(this.selectedDate).format('DD-MMMM-YYYY');
     const month = selDate.month();
+    this.loader.show();
+    this.dialogRef2.close('confirm');
+    let type;
+    if ((this.oldShift != this.shift) && this.number > 12 && (this.selectedAttendance == "Work From Home")) {
+      type = "Extra WFH and Shift Change"
+    } else if (this.oldShift != this.shift) {
+      type = "Shift Change"
+    } else if (this.number > 12) {
+      type = "Extra WFH"
+    }
+
     let approvalList = {
       id: this.email + this.formattedDate,
       date: this.formattedDate,
@@ -347,7 +358,7 @@ export class UserDashboardComponent {
       raisedBy: this.email,
       name: this.username,
       raisedTo: this.managerId,
-      comments: "",
+      comments: type,
       status: "Pending",
       type: type,
       prevAttendance: "",
@@ -356,20 +367,36 @@ export class UserDashboardComponent {
       newShift: this.shift
     };
 
-    this.loader.show();
-    this.dialogRef2.close('confirm');
-    this.api.sendForApproval(approvalList).subscribe({
+    this.api.checkAttendanceDuplicate(this.email, this.formattedDate).subscribe({
       next: (response) => {
-        if (response === "ApprovalList saved successfully.") {
-          this.approvalSuccess = true;
+        if (response.status === "Not Exist") {
+          this.loader.show();
+          this.api.sendForApproval(approvalList).subscribe({
+            next: (response) => {
+              if (response === "ApprovalList saved successfully.") {
+                this.approvalSuccess = true;
+                setTimeout(() => {
+                  this.approvalSuccess = false;
+                }, 3000);
+              } else if (response === "Error: ApprovalList with this ID already exists.") {
+                this.approvalError = true;
+                setTimeout(() => {
+                  this.approvalError = false;
+                }, 3000);
+              }
+              this.loader.hide();
+            },
+            error: (error) => {
+              console.error("Error during API call:", error);
+              this.loader.hide();              
+            }
+          });
+        } else if (response.status === "Exist") {
+          console.log()
+          this.attendanceError = true;
           setTimeout(() => {
-            this.approvalSuccess = false;
-          }, 3000);
-        } else if (response === "Error: ApprovalList with this ID already exists.") {
-          this.approvalError = true;
-          setTimeout(() => {
-            this.approvalError = false;
-          }, 3000);
+            this.attendanceError = false;
+          }, 2000);
         }
         this.loader.hide();
       },
@@ -377,6 +404,6 @@ export class UserDashboardComponent {
         console.error("Error during API call:", error);
         this.loader.hide();
       }
-    });
+    })
   }
 }

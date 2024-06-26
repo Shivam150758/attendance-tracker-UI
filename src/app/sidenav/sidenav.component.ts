@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from 'src/environments/environment.prod';
 import { ApiCallingService } from 'src/service/API/api-calling.service';
 import { SharedService } from 'src/service/EventEmitter/shared.service';
 import { LoaderService } from 'src/service/Loader/loader.service';
@@ -69,7 +70,8 @@ export class SidenavComponent {
   }
 
   getApprovalList(emailId: string): Observable<ApprovalListResponse> {
-    const apiUrl = 'http://localhost:8080/requestApproval';
+    let baseUrl = environment.apiUrl;
+    let apiUrl = `${baseUrl}/requestApproval`;
     const payload = { raisedBy: emailId, raisedTo: emailId };
     return this.http.post<ApprovalListResponse>(apiUrl, payload);
   }
