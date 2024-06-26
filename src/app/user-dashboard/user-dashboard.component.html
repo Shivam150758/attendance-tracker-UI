@@ -24,6 +24,12 @@
                             <mat-option *ngFor="let qtr of distinctQuarters" [value]="qtr">{{qtr}}</mat-option>
                         </mat-select>
                     </mat-form-field>
+                    <mat-form-field *ngIf="admin" class="dropdown" appearance="outline">
+                        <mat-label>Users</mat-label>
+                        <mat-select [(ngModel)]="selectedUser" (selectionChange)="getUserAttendance()">
+                            <mat-option *ngFor="let user of subOrdinates" [value]="user.emailId">{{user.name}}</mat-option>
+                        </mat-select>
+                    </mat-form-field>
                 </div>
                 <div class="buttons">
                     <button mat-raised-button color="primary" (click)="openDialog()" style="margin-right: 10px;">Mark

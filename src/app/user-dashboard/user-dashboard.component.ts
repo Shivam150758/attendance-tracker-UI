@@ -50,6 +50,7 @@ export class UserDashboardComponent {
   value = 80;
   selectedYear: any;
   selectedQuarter: any;
+  selectedUser: any;
   months: string[] = [];
 
   @ViewChild('dialogTemplate')
@@ -77,6 +78,8 @@ export class UserDashboardComponent {
   managerId: any;
   approvalSuccess: boolean = false;
   approvalError: boolean = false;
+  subOrdinates: any;
+  admin: boolean = false;
 
   constructor(private loader: LoaderService, private router: Router, private sharedService: SharedService,
     private dialog: MatDialog, private api: ApiCallingService) {
@@ -94,13 +97,16 @@ export class UserDashboardComponent {
       await this.getCurrentQuarterAndYear();
       await this.loadDistinctYears();
       await this.loadDistinctQuarters();
+      await this.getSubordinates();
       this.selectedYear = this.currentYear.toString();
       this.selectedQuarter = "Q" + this.currentQuarter;
       let userDataString = sessionStorage.getItem('user');
+      this.admin = sessionStorage.getItem('Admin') === "true";
       if (userDataString) {
         let userData = JSON.parse(userDataString);
         this.username = userData.name;
         this.email = userData.emailId;
+        this.selectedUser = this.email;
         this.team = userData.team;
         this.shift = userData.shift;
         this.managerId = userData.managerId;
@@ -110,6 +116,19 @@ export class UserDashboardComponent {
 
       }
     }
+  }
+
+  getSubordinates() {
+    this.api.getListofSubOrdinates(this.email).subscribe({
+      next: (subordinateResponse) => {
+        this.subOrdinates = subordinateResponse;
+        this.loader.hide();
+      },
+      error: (error) => {
+        console.error("Error fetching subordinates list:", error);
+        this.loader.hide();
+      }
+    });
   }
 
   getUserAttendance() {
@@ -123,13 +142,22 @@ export class UserDashboardComponent {
     } else if (this.selectedQuarter == 'Q4') {
       this.months = ['October', 'November', 'December']
     }
-    this.api.getUserAttendance(this.email, this.selectedYear, this.selectedQuarter).subscribe({
+    this.api.getUserAttendance(this.selectedUser, this.selectedYear, this.selectedQuarter).subscribe({
       next: (response) => {
         if (response) {
           this.attendanceData = response;
           this.number = response.wfh;
           this.remaining = 13 - this.number;
           this.value = (10 / 13) * 100;
+        } else {
+          this.attendanceData = {
+            wfo: 0,
+            leaves: 0,
+            holidays: 0,
+            wfhFriday: 0,
+            wfoFriday: 0,
+            number: 0
+          };
         }
         this.loader.hide();
       },
@@ -267,7 +295,7 @@ export class UserDashboardComponent {
 
   categoryAttendance(attendance: string) {
     if (attendance == 'Attendance') {
-      this.api.getDetailedAttendanceQtr(this.email, this.selectedYear, this.selectedQuarter).subscribe({
+      this.api.getDetailedAttendanceQtr(this.selectedUser, this.selectedYear, this.selectedQuarter).subscribe({
         next: (response) => {
           this.detailedArray = response;
           this.loader.hide();
@@ -388,7 +416,7 @@ export class UserDashboardComponent {
             },
             error: (error) => {
               console.error("Error during API call:", error);
-              this.loader.hide();              
+              this.loader.hide();
             }
           });
         } else if (response.status === "Exist") {

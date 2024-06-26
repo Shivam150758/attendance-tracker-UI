@@ -10,6 +10,8 @@ export class ApiCallingService {
 
   private baseUrl = environment.apiUrl;
 
+  // private baseUrl = "http://localhost:8080"
+
   private loginUrl = `${this.baseUrl}/login`;
   private markAttendance = `${this.baseUrl}/addAttendance`;
   private qtrLevelAttendance = `${this.baseUrl}/addUserAttendance`;

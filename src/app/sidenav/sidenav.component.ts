@@ -37,6 +37,7 @@ export class SidenavComponent {
     }
     await this.api.getListofSubOrdinates(this.email).subscribe({
       next: (subordinateResponse) => {
+        sessionStorage.setItem('subOrdinates', JSON.stringify(subordinateResponse));
         if (Array.isArray(subordinateResponse) && subordinateResponse.length > 0) {
           sessionStorage.setItem('Admin', "true");
         } else {
