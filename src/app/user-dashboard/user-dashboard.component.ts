@@ -25,7 +25,7 @@ export class UserDashboardComponent {
   selectedDate: Date | null = null;
   selectedAttendance: any;
   options: any[] = [];
-  shiftOptions: any[] = ['Shift A', 'Shift B', 'Shift C', 'Shift D', 'Shift E'];
+  shiftOptions: any[] = ['Shift A', 'Shift B', 'Shift C', 'Shift D', 'Shift F'];
   number: number = 0;
   remaining: any = 0;
   days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -81,6 +81,12 @@ export class UserDashboardComponent {
   subOrdinates: any;
   admin: boolean = false;
 
+  maxNumber: number = 13;
+  percentage: number = 0;
+  cappedPercentage: number = 0;
+  leftRotation: string = 'rotate(0deg)';
+  rightRotation: string = 'rotate(0deg)';
+
   constructor(private loader: LoaderService, private router: Router, private sharedService: SharedService,
     private dialog: MatDialog, private api: ApiCallingService) {
     this.subscription = this.sharedService.popupTrigger.subscribe(data => {
@@ -118,6 +124,33 @@ export class UserDashboardComponent {
     }
   }
 
+  updateProgress(number: number) {
+    this.percentage = (number / this.maxNumber) * 100;
+    this.cappedPercentage = Math.min(this.percentage, 100);
+
+    const angle = (this.cappedPercentage / 100) * 360;
+
+    if (this.cappedPercentage <= 50) {
+      this.rightRotation = `rotate(${angle}deg)`;
+      this.leftRotation = 'rotate(0deg)';
+    } else {
+      this.rightRotation = 'rotate(180deg)';
+      this.leftRotation = `rotate(${angle - 180}deg)`;
+    }
+  }
+
+  getProgressBarClass(): string {
+    if (this.percentage < 60) {
+      return 'green';
+    } else if (this.percentage >= 60 && this.percentage < 85) {
+      return 'yellow';
+    } else if (this.percentage >= 85 && this.percentage < 95) {
+      return 'orange';
+    } else {
+      return 'red';
+    }
+  }
+
   getSubordinates() {
     this.api.getListofSubOrdinates(this.email).subscribe({
       next: (subordinateResponse) => {
@@ -148,7 +181,7 @@ export class UserDashboardComponent {
           this.attendanceData = response;
           this.number = response.wfh;
           this.remaining = 13 - this.number;
-          this.value = (10 / 13) * 100;
+          this.updateProgress(this.number);
         } else {
           this.attendanceData = {
             wfo: 0,
@@ -223,15 +256,34 @@ export class UserDashboardComponent {
     const year = selDate.year();
     const quarter = selDate.quarter();
     const month = selDate.month();
+    let allowance = 0;
+    let foodAllowance = 0;
+
+    if (this.shift == "Shift A") {
+      allowance = 0;
+      foodAllowance = 0;
+    } else if (this.shift == "Shift B") {
+      allowance = 150;
+      foodAllowance = 100;
+    } else if (this.shift == "Shift C") {
+      allowance = 250;
+      foodAllowance = 100;
+    } else if (this.shift == "Shift D") {
+      allowance = 350;
+      foodAllowance = 100;
+    } else if (this.shift == "Shift F") {
+      allowance = 250;
+      foodAllowance = 0;
+    }
 
     this.api.attendance(this.email, this.email, this.formattedDate, this.selectedAttendance, year.toString(),
-      "Q" + quarter, (month + 1).toString(), this.email, this.time.toString(), this.shift).subscribe({
+      "Q" + quarter, (month + 1).toString(), this.email, this.time.toString(), this.shift, allowance, foodAllowance).subscribe({
         next: (response) => {
           this.api.addUserAttendance(this.email, this.email, this.selectedAttendance, year.toString(),
             "Q" + quarter, this.username).subscribe({
               next: (response) => {
                 this.api.addMonthlyAttendance(this.email, this.email, this.selectedAttendance, year.toString(),
-                  "Q" + quarter, this.username, (month + 1).toString()).subscribe({
+                  "Q" + quarter, this.username, (month + 1).toString(), allowance, foodAllowance).subscribe({
                     next: (response) => {
                       this.loader.hide();
                       let currentUrl = this.router.url;
@@ -273,10 +325,33 @@ export class UserDashboardComponent {
   }
 
   myFilter = (d: Date | null): boolean => {
+    if (!d) {
+      return false;
+    }
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return d ? d <= today : false;
+
+    const specificDisabledDates = [
+      new Date(2024, 7, 15),
+      new Date(2024, 9, 2),
+      new Date(2024, 9, 31),
+      new Date(2024, 10, 1),
+      new Date(2024, 11, 25)
+    ];
+
+    const isWeekend = (d.getDay() === 0 || d.getDay() === 6);
+    const isAfterToday = d > today;
+    const isBeforeStart = d < new Date(2024, 3, 1);
+    const isSpecificDisabledDate = specificDisabledDates.some(disabledDate =>
+      d.getFullYear() === disabledDate.getFullYear() &&
+      d.getMonth() === disabledDate.getMonth() &&
+      d.getDate() === disabledDate.getDate()
+    );
+
+    return !isWeekend && !isAfterToday && !isBeforeStart && !isSpecificDisabledDate;
   };
+
 
   dateChanged(event: MatDatepickerInputEvent<Date>) {
     this.selectedDate = event.value;
@@ -364,6 +439,8 @@ export class UserDashboardComponent {
 
   sendForApproval() {
     const selDate = moment(this.selectedDate);
+    const year = selDate.year();
+    const quarter = selDate.quarter();
     this.formattedDate = moment(this.selectedDate).format('DD-MMMM-YYYY');
     const month = selDate.month();
     this.loader.show();
@@ -380,8 +457,8 @@ export class UserDashboardComponent {
     let approvalList = {
       id: this.email + this.formattedDate,
       date: this.formattedDate,
-      year: this.selectedYear,
-      quarter: this.selectedQuarter,
+      year: year,
+      quarter: "Q" + quarter,
       month: (month + 1).toString(),
       raisedBy: this.email,
       name: this.username,

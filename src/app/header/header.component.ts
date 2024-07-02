@@ -12,7 +12,6 @@ export class HeaderComponent {
   username: any
   team: any
 
-
   @Input() title: string = 'Digital GBS Attendance Tracker';
 
   constructor(private route: Router, private loader: LoaderService) {

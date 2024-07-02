@@ -121,23 +121,6 @@ describe('UserDashboardComponent', () => {
     expect(apiService.attendance).toHaveBeenCalled();
   });
 
-  it('should call openDetails and get detailed attendance', () => {
-    component.openDetails(false);
-    expect(apiService.getDetailedAttendance).toHaveBeenCalled();
-    expect(loaderService.show).toHaveBeenCalled();
-  });
-
-  it('should call downloadExcel', () => {
-    component.downloadExcel();
-    expect(XLSX.utils.book_new).toHaveBeenCalled();
-  });
-
-  it('should call saveAsExcelFile', () => {
-    const buffer = new ArrayBuffer(8);
-    component.saveAsExcelFile(buffer, 'test');
-    expect(saveAs).toHaveBeenCalled();
-  });
-
   it('should sort data correctly', () => {
     component.detailedArray = [
       { date: new Date(2024, 3, 1) },

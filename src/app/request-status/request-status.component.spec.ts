@@ -10,8 +10,8 @@ describe('RequestStatusComponent', () => {
     await TestBed.configureTestingModule({
       imports: [RequestStatusComponent]
     })
-    .compileComponents();
-    
+      .compileComponents();
+
     fixture = TestBed.createComponent(RequestStatusComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

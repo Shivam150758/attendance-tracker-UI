@@ -52,7 +52,7 @@ export class ResetPasswordComponent {
       }
       this.api.reset(emailId, password).subscribe({
         next: (response) => {
-          sessionStorage.setItem('resetFlag','true');
+          sessionStorage.setItem('resetFlag', 'true');
           this.router.navigateByUrl('/');
           this.loader.hide();
         },

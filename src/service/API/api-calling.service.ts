@@ -8,9 +8,9 @@ import { environment } from 'src/environments/environment.prod';
 })
 export class ApiCallingService {
 
-  private baseUrl = environment.apiUrl;
+  // private baseUrl = environment.apiUrl;
 
-  // private baseUrl = "http://localhost:8080"
+  private baseUrl = "http://localhost:8080"
 
   private loginUrl = `${this.baseUrl}/login`;
   private markAttendance = `${this.baseUrl}/addAttendance`;
@@ -44,8 +44,8 @@ export class ApiCallingService {
     return this.http.post(this.resetPassword, { emailId: email, password: password });
   }
 
-  attendance(Id: string, email: string, date: string, atte: string, year: string, qtr: string, mth: string, lub: string, luo: string, shift: string): Observable<any> {
-    return this.http.post(this.markAttendance, { id: Id + date, emailId: email, date: date, attendance: atte, year: year, quarter: qtr, month: mth, shift: shift, lastUpdatedBy: lub, lastUpdatedOn: luo });
+  attendance(Id: string, email: string, date: string, atte: string, year: string, qtr: string, mth: string, lub: string, luo: string, shift: string, allowance: number, foodAllowance: number): Observable<any> {
+    return this.http.post(this.markAttendance, { id: Id + date, emailId: email, date: date, attendance: atte, year: year, quarter: qtr, month: mth, shift: shift, allowance: allowance, foodAllowance: foodAllowance, lastUpdatedBy: lub, lastUpdatedOn: luo });
   }
 
   addUserAttendance(Id: string, email: string, attendance: string, year: string, quarter: string, name: string): Observable<any> {
@@ -92,8 +92,8 @@ export class ApiCallingService {
     return this.http.get<string[]>(this.distinctMonth);
   }
 
-  addMonthlyAttendance(Id: string, email: string, attendance: string, year: string, quarter: string, name: string, month: string): Observable<any> {
-    return this.http.post(this.adminMonthlyAttendance, { id: Id + quarter + year + "_" + month, emailId: email, quarter: quarter, year: year, attendance: attendance, name: name, month: month });
+  addMonthlyAttendance(Id: string, email: string, attendance: string, year: string, quarter: string, name: string, month: string, allowance: number, foodAllowance: number): Observable<any> {
+    return this.http.post(this.adminMonthlyAttendance, { id: Id + quarter + year + "_" + month, emailId: email, quarter: quarter, year: year, attendance: attendance, name: name, month: month, allowance: allowance, foodAllowance: foodAllowance });
   }
 
   userMonthlyAttendanceData(email: string, year: string, quarter: string, month: string): Observable<any> {
@@ -136,7 +136,6 @@ export class ApiCallingService {
       'Content-Type': 'application/json'
     });
 
-    console.log(data)
     return this.http.post(this.updateAttendance, {
       id: data._id,
       name: data.name,

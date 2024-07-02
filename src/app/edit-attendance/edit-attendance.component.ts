@@ -44,7 +44,7 @@ export class EditAttendanceComponent {
   sortColumn: string = '';
   sortAscending: boolean = true;
   options: any[] = [];
-  shiftOptions = ['Shift A', 'Shift B', 'Shift C', 'Shift D', 'Shift E', 'Shift F'];
+  shiftOptions = ['Shift A', 'Shift B', 'Shift C', 'Shift D', 'Shift F'];
   textComment = '';
 
   @ViewChild('editDialog')

@@ -25,8 +25,8 @@ export class SidenavComponent {
   raisedToList!: any[];
   badgeCount: any;
 
-  constructor(private loader: LoaderService, private sharedService: SharedService, 
-    private api: ApiCallingService, private http: HttpClient ) {  }
+  constructor(private loader: LoaderService, private sharedService: SharedService,
+    private api: ApiCallingService, private http: HttpClient) { }
 
   async ngOnInit() {
     this.loader.show();
@@ -57,7 +57,7 @@ export class SidenavComponent {
         this.raisedByList = response.raisedByList;
         this.raisedToList = response.raisedToList;
         this.raisedToList.forEach(element => {
-          if(element.status == 'Pending') {
+          if (element.status == 'Pending') {
             this.badgeCount++;
           }
         });
@@ -71,7 +71,9 @@ export class SidenavComponent {
   }
 
   getApprovalList(emailId: string): Observable<ApprovalListResponse> {
-    let baseUrl = environment.apiUrl;
+    // let baseUrl = environment.apiUrl;
+    let baseUrl = "http://localhost:8080";
+
     let apiUrl = `${baseUrl}/requestApproval`;
     const payload = { raisedBy: emailId, raisedTo: emailId };
     return this.http.post<ApprovalListResponse>(apiUrl, payload);

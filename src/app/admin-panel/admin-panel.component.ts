@@ -5,6 +5,7 @@ import { LoaderService } from 'src/service/Loader/loader.service';
 import * as moment from 'moment-timezone';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-admin-panel',
@@ -49,9 +50,8 @@ export class AdminPanelComponent {
   };
   detailedArray: any;
 
-  constructor(private api: ApiCallingService, private loader: LoaderService, private dialog: MatDialog) {
-
-  }
+  constructor(private api: ApiCallingService, private loader: LoaderService, private dialog: MatDialog,
+    private router: Router) { }
   users: any = [];
   attendanceReportData: any = [];
 
@@ -76,6 +76,10 @@ export class AdminPanelComponent {
       let userData = JSON.parse(userDataString);
       this.emailId = userData.emailId;
     }
+    let auth = sessionStorage.getItem('Admin');
+    if (auth != 'true') {
+      this.router.navigateByUrl('/');
+    }
     this.selectedYear = this.currentYear.toString();
     this.selectedQuarter = "Q" + this.currentQuarter;
     this.selectedMonth = this.currentMonth.toString();
@@ -92,7 +96,7 @@ export class AdminPanelComponent {
         }
         this.api.getListofSubOrdinates(this.emailId).subscribe({
           next: (subordinateResponse) => {
-            this.detailedArray = subordinateResponse;    
+            this.detailedArray = subordinateResponse;
             this.mergedArray = this.detailedArray.map((user: any) => {
               const report = this.attendanceReportData.find((report: any) => report.emailId === user.emailId) || {};
               const defaultValues = {
@@ -104,7 +108,7 @@ export class AdminPanelComponent {
                 holidays: 0
               };
               return { ...defaultValues, ...user, ...report };
-            });    
+            });
             console.log(this.mergedArray);
             this.loader.hide();
           },

@@ -58,7 +58,9 @@ export class RequestStatusComponent {
   }
 
   getApprovalList(emailId: string): Observable<ApprovalListResponse> {
-    let baseUrl = environment.apiUrl;
+    // let baseUrl = environment.apiUrl;
+    let baseUrl = "http://localhost:8080";
+
     let apiUrl = `${baseUrl}/requestApproval`;
     const payload = { raisedBy: emailId, raisedTo: emailId };
     return this.http.post<ApprovalListResponse>(apiUrl, payload);

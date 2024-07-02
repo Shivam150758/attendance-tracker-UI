@@ -34,7 +34,7 @@ export class LoginPageComponent {
       this.router.navigateByUrl('/user-dashboard');
     }
 
-    if(reset === 'true') {
+    if (reset === 'true') {
       this.resetSuccess = true;
       sessionStorage.removeItem('auth')
       setTimeout(() => {
@@ -46,7 +46,7 @@ export class LoginPageComponent {
   }
 
   onSubmit() {
-    if (this.loginForm.valid) {      
+    if (this.loginForm.valid) {
       this.loader.show();
       let { email, password } = this.loginForm.value;
       if (password == '12345') {

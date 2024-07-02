@@ -10,8 +10,8 @@ describe('EditAttendanceComponent', () => {
     await TestBed.configureTestingModule({
       imports: [EditAttendanceComponent]
     })
-    .compileComponents();
-    
+      .compileComponents();
+
     fixture = TestBed.createComponent(EditAttendanceComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
