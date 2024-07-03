@@ -76,7 +76,7 @@
 
             <mat-form-field appearance="outline" class="form-field">
                 <mat-label>Attendance</mat-label>
-                <mat-select [(ngModel)]="popUpAttendance">
+                <mat-select [(ngModel)]="popUpAttendance" (selectionChange)="onAttendanceChange()">
                     <ng-container *ngFor="let option of options">
                         <mat-option [value]="option">{{ option }}</mat-option>
                     </ng-container>
