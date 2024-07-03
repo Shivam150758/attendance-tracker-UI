@@ -72,6 +72,7 @@ export class AdminPanelComponent {
     await this.getCurrentQuarterAndYear();
     await this.loadDistinctYears();
     await this.loadDistinctQuarters();
+    await this.getDistinctMonths();
     let userDataString = sessionStorage.getItem('user');
     if (userDataString) {
       let userData = JSON.parse(userDataString);
@@ -90,6 +91,7 @@ export class AdminPanelComponent {
   }
 
   getData() {
+    this.loader.show()
     this.api.downloadMonthlyAdminReport(this.selectedMonth, this.selectedYear).subscribe({
       next: (attendanceResponse) => {
         if (attendanceResponse) {
@@ -110,7 +112,6 @@ export class AdminPanelComponent {
               };
               return { ...defaultValues, ...user, ...report };
             });
-            console.log(this.mergedArray);
             this.loader.hide();
           },
           error: (error) => {
