@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, TemplateRef, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import * as moment from 'moment';
@@ -71,9 +72,9 @@ export class EditAttendanceComponent {
     this.loader.hide();
     this.selectedYear = this.currentYear.toString();
     this.selectedMonth = this.currentMonth.toString();
-    let userDataString = sessionStorage.getItem('user');
+    const userDataString = sessionStorage.getItem('user');
     if (userDataString) {
-      let userData = JSON.parse(userDataString);
+      const userData = JSON.parse(userDataString);
       this.username = userData.name;
       this.email = userData.emailId;
       this.managerId = userData.managerId
@@ -132,7 +133,7 @@ export class EditAttendanceComponent {
         this.sortData('date')
         this.loader.hide();
       },
-      error: (error) => {
+      error: () => {
         this.loader.hide();
       }
     });
@@ -171,7 +172,7 @@ export class EditAttendanceComponent {
     this.textComment = "";
     this.popUpDate = this.parseDateString(item.date);
 
-    let week = this.getDayOfWeek(this.popUpDate);
+    const week = this.getDayOfWeek(this.popUpDate);
     this.popUpAttendance = item.attendance;
     this.oldPopUpAttendance = this.popUpAttendance;
 
@@ -183,9 +184,9 @@ export class EditAttendanceComponent {
       this.options = ['Work From Office', 'Work From Home', 'Leave', 'Public Holiday'];
     }
 
-    if(item.attendance == 'Leave') {
+    if (item.attendance == 'Leave') {
       this.shiftOptions = ['Absent']
-    } else if(item.attendance == 'Public Holiday') {
+    } else if (item.attendance == 'Public Holiday') {
       this.shiftOptions = ['Holiday']
     }
 
@@ -223,7 +224,7 @@ export class EditAttendanceComponent {
     const quarter = selDate.quarter();
     const month = selDate.month();
 
-    let approvalList = {
+    const approvalList = {
       id: this.email + formattedDate,
       date: formattedDate,
       year: year.toString(),
@@ -242,7 +243,7 @@ export class EditAttendanceComponent {
     };
 
     if (type == "No Changes") {
-
+      /* empty */
     } else {
       this.loader.show();
       this.dialogRef.close();

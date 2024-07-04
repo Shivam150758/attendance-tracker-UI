@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, TemplateRef, ViewChild } from '@angular/core';
 import { LoaderService } from 'src/service/Loader/loader.service';
 import * as moment from 'moment-timezone';
@@ -111,7 +112,7 @@ export class UserDashboardComponent {
 
   async ngOnInit() {
     this.loader.show();
-    let auth = sessionStorage.getItem('auth');
+    const auth = sessionStorage.getItem('auth');
     if (auth !== 'Authorized') {
       this.router.navigateByUrl('/');
     } else {
@@ -120,9 +121,9 @@ export class UserDashboardComponent {
       await this.loadDistinctQuarters();
       this.selectedYear = this.currentYear.toString();
       this.selectedQuarter = "Q" + this.currentQuarter;
-      let userDataString = sessionStorage.getItem('user');
+      const userDataString = sessionStorage.getItem('user');
       if (userDataString) {
-        let userData = JSON.parse(userDataString);
+        const userData = JSON.parse(userDataString);
         this.username = userData.name;
         this.email = userData.emailId;
         this.selectedUser = this.email;
@@ -255,7 +256,7 @@ export class UserDashboardComponent {
 
   transformData(): void {
     this.allowanceData = {};
-    for (let allowance of this.allowances) {
+    for (const allowance of this.allowances) {
       const monthName = this.monthMapping[allowance.month];
       if (!this.allowanceData[monthName]) {
         this.allowanceData[monthName] = 0;
@@ -274,6 +275,7 @@ export class UserDashboardComponent {
     });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   openPopup(data: any) {
     this.openDialog();
   }
@@ -305,8 +307,7 @@ export class UserDashboardComponent {
     this.dialogRef2.afterClosed().subscribe(result => {
       if (result === 'confirm') {
         this.dialogRef1.close();
-      } else {
-      }
+      } else { /* empty */ }
     });
   }
 
@@ -348,16 +349,16 @@ export class UserDashboardComponent {
     this.loader.show();
     this.api.attendance(this.email, this.email, this.formattedDate, this.selectedAttendance, year.toString(),
       "Q" + quarter, (month + 1).toString(), this.email, this.time.toString(), this.shift, allowance, foodAllowance).subscribe({
-        next: (response) => {
+        next: () => {
           this.loader.show();
           this.api.addUserAttendance(this.email, this.email, this.selectedAttendance, year.toString(),
             "Q" + quarter, this.username).subscribe({
-              next: (response) => {
+              next: () => {
                 this.loader.show();
                 this.api.addMonthlyAttendance(this.email, this.email, this.selectedAttendance, year.toString(),
                   "Q" + quarter, this.username, (month + 1).toString(), allowance, foodAllowance).subscribe({
-                    next: (response) => {
-                      let currentUrl = this.router.url;
+                    next: () => {
+                      const currentUrl = this.router.url;
                       this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
                         this.router.navigate([currentUrl]);
                       });
@@ -440,8 +441,7 @@ export class UserDashboardComponent {
       } else {
         this.options = ['Work From Office', 'Work From Home', 'Leave', 'Public Holiday']
       }
-    } else {
-    }
+    } else { /* empty */ }
   }
 
   onAttendanceChange(): void {
@@ -468,7 +468,7 @@ export class UserDashboardComponent {
           this.detailedArray = response;
           this.loader.hide();
         },
-        error: (error) => {
+        error: () => {
           this.loader.hide();
         }
       });
@@ -480,7 +480,7 @@ export class UserDashboardComponent {
           this.detailedArray = response;
           this.loader.hide();
         },
-        error: (error) => {
+        error: () => {
           this.loader.hide();
         }
       });
@@ -548,7 +548,7 @@ export class UserDashboardComponent {
       type = "Extra WFH"
     }
 
-    let approvalList = {
+    const approvalList = {
       id: this.email + this.formattedDate,
       date: this.formattedDate,
       year: year,

@@ -1,6 +1,8 @@
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { environment } from 'src/environments/environment.prod';
 
 @Injectable({
@@ -8,9 +10,8 @@ import { environment } from 'src/environments/environment.prod';
 })
 export class ApiCallingService {
 
-  private baseUrl = environment.apiUrl;
-
-  // private baseUrl = "http://localhost:8080"
+  // private baseUrl = environment.apiUrl;
+  private baseUrl = "http://localhost:8080"
 
   private loginUrl = `${this.baseUrl}/login`;
   private markAttendance = `${this.baseUrl}/addAttendance`;

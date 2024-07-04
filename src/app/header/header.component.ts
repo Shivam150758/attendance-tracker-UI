@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, Input } from '@angular/core';
 import { Router } from '@angular/router';
 import { LoaderService } from 'src/service/Loader/loader.service';
@@ -19,9 +20,9 @@ export class HeaderComponent {
   }
 
   ngOnInit() {
-    let userDataString = sessionStorage.getItem('user');
+    const userDataString = sessionStorage.getItem('user');
     if (userDataString) {
-      let userData = JSON.parse(userDataString);
+      const userData = JSON.parse(userDataString);
       this.username = userData.name;
       this.team = userData.team;
     } else {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, TemplateRef, ViewChild } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { ApiCallingService } from 'src/service/API/api-calling.service';
@@ -73,12 +74,12 @@ export class AdminPanelComponent {
     await this.loadDistinctYears();
     await this.loadDistinctQuarters();
     await this.getDistinctMonths();
-    let userDataString = sessionStorage.getItem('user');
+    const userDataString = sessionStorage.getItem('user');
     if (userDataString) {
-      let userData = JSON.parse(userDataString);
+      const userData = JSON.parse(userDataString);
       this.emailId = userData.emailId;
     }
-    let auth = sessionStorage.getItem('Admin');
+    const auth = sessionStorage.getItem('Admin');
     if (auth != 'true') {
       this.router.navigateByUrl('/');
     }
@@ -180,7 +181,7 @@ export class AdminPanelComponent {
         }
         this.loader.hide();
       },
-      error: (error) => {
+      error: () => {
         this.loader.hide();
       }
     });
@@ -244,7 +245,7 @@ export class AdminPanelComponent {
     // Header row with dates
     const dateRow: string[] = ['Name', 'Manager ID', 'Shift'];
     const dayRow: string[] = ['', '', ''];
-    for (let day of this.daysInMonth) {
+    for (const day of this.daysInMonth) {
       const date = new Date(this.selectedYear, this.selectedMonth - 1, day);
       const formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '-');
       dateRow.push(formattedDate);
@@ -254,13 +255,12 @@ export class AdminPanelComponent {
     ws_data.push(dateRow);
     ws_data.push(dayRow);
 
-    // Placeholder for user data (fetch and fill in actual data here)
     const exampleData = [
       { name: 'John Doe', managerId: 'M001', shift: 'Shift A', attendance: Array(this.daysInMonth.length).fill('Present') },
       { name: 'Jane Smith', managerId: 'M002', shift: 'Shift B', attendance: Array(this.daysInMonth.length).fill('Absent') }
     ];
 
-    for (let user of exampleData) {
+    for (const user of exampleData) {
       const row = [user.name, user.managerId, user.shift, ...user.attendance];
       ws_data.push(row);
     }

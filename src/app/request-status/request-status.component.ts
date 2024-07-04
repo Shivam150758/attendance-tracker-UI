@@ -1,10 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { HttpClient } from '@angular/common/http';
 import { Component, TemplateRef, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
-import * as moment from 'moment';
 import { Observable } from 'rxjs';
-import { environment } from 'src/environments/environment.prod';
 import { ApiCallingService } from 'src/service/API/api-calling.service';
 import { LoaderService } from 'src/service/Loader/loader.service';
 
@@ -35,9 +34,9 @@ export class RequestStatusComponent {
 
   ngOnInit() {
     this.loader.show();
-    let userDataString = sessionStorage.getItem('user');
+    const userDataString = sessionStorage.getItem('user');
     if (userDataString) {
-      let userData = JSON.parse(userDataString);
+      const userData = JSON.parse(userDataString);
       this.emailId = userData.emailId;
       this.admin = userData.admin;
     }
@@ -55,10 +54,10 @@ export class RequestStatusComponent {
   }
 
   getApprovalList(emailId: string): Observable<ApprovalListResponse> {
-    let baseUrl = environment.apiUrl;
-    // let baseUrl = "http://localhost:8080";
+    // let baseUrl = environment.apiUrl;
+    const baseUrl = "http://localhost:8080";
 
-    let apiUrl = `${baseUrl}/requestApproval`;
+    const apiUrl = `${baseUrl}/requestApproval`;
     const payload = { raisedBy: emailId, raisedTo: emailId };
     return this.http.post<ApprovalListResponse>(apiUrl, payload);
   }
@@ -68,7 +67,7 @@ export class RequestStatusComponent {
     this.dialogRef.close();
     this.loader.show();
     this.api.updateAttendanceApproval(item).subscribe({
-      next: (response) => {
+      next: () => {
         this.loader.hide()
       },
       error: (error) => {
@@ -83,7 +82,7 @@ export class RequestStatusComponent {
     this.dialogRef.close();
     this.loader.show();
     this.api.updateAttendanceApproval(item).subscribe({
-      next: (response) => {
+      next: () => {
         this.loader.hide()
       },
       error: (error) => {
@@ -98,9 +97,9 @@ export class RequestStatusComponent {
     this.dialogRef.close();
     this.loader.show();
     this.api.updateAttendanceApproval(item).subscribe({
-      next: (response) => {
+      next: () => {
         this.loader.hide()
-        let currentUrl = this.router.url;
+        const currentUrl = this.router.url;
         this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
           this.router.navigate([currentUrl]);
         });

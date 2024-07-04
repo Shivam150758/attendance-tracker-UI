@@ -21,6 +21,7 @@ export class LoginPageComponent {
       email: new FormControl('', [
         Validators.required,
         Validators.email,
+        // eslint-disable-next-line no-useless-escape
         Validators.pattern(/^[\w-\.]+@fossil.com$/)
       ]),
       password: new FormControl('', [Validators.required])
@@ -28,8 +29,8 @@ export class LoginPageComponent {
   }
 
   ngOnInit() {
-    let auth = sessionStorage.getItem('auth');
-    let reset = sessionStorage.getItem('resetFlag');
+    const auth = sessionStorage.getItem('auth');
+    const reset = sessionStorage.getItem('resetFlag');
     if (auth === 'Authorized') {
       this.router.navigateByUrl('/user-dashboard');
     }
@@ -48,7 +49,7 @@ export class LoginPageComponent {
   onSubmit() {
     if (this.loginForm.valid) {
       this.loader.show();
-      let { email, password } = this.loginForm.value;
+      const { email, password } = this.loginForm.value;
       if (password == '12345') {
         this.api.login(email, password).subscribe({
           next: (response) => {

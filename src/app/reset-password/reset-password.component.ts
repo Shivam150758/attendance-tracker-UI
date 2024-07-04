@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component } from '@angular/core';
 import { FormGroup, FormControl, Validators, ValidatorFn, AbstractControl } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -22,7 +23,7 @@ export class ResetPasswordComponent {
   }
 
   ngOnInit() {
-    let auth = sessionStorage.getItem('auth');
+    const auth = sessionStorage.getItem('auth');
     if (auth != 'Reset') {
       this.router.navigateByUrl('/');
     }
@@ -43,20 +44,20 @@ export class ResetPasswordComponent {
   onSubmit() {
     if (this.loginForm.valid) {
       this.loader.show();
-      let { email, password } = this.loginForm.value;
-      let userDataString = sessionStorage.getItem('user');
+      const { password } = this.loginForm.value;
+      const userDataString = sessionStorage.getItem('user');
       let emailId;
       if (userDataString) {
-        let userData = JSON.parse(userDataString);
+        const userData = JSON.parse(userDataString);
         emailId = userData.emailId;
       }
       this.api.reset(emailId, password).subscribe({
-        next: (response) => {
+        next: () => {
           sessionStorage.setItem('resetFlag', 'true');
           this.router.navigateByUrl('/');
           this.loader.hide();
         },
-        error: (error) => {
+        error: () => {
           this.loader.hide();
         }
       });

@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { Observable } from 'rxjs';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { environment } from 'src/environments/environment.prod';
 import { ApiCallingService } from 'src/service/API/api-calling.service';
 import { SharedService } from 'src/service/EventEmitter/shared.service';
@@ -29,9 +31,9 @@ export class SidenavComponent {
     private api: ApiCallingService, private http: HttpClient) { }
 
   ngOnInit() {
-    let userDataString = sessionStorage.getItem('user');
+    const userDataString = sessionStorage.getItem('user');
     if (userDataString) {
-      let userData = JSON.parse(userDataString);
+      const userData = JSON.parse(userDataString);
       this.email = userData.emailId;
       this.admin = userData.admin;
     }
@@ -54,10 +56,10 @@ export class SidenavComponent {
   }
 
   getApprovalList(emailId: string): Observable<ApprovalListResponse> {
-    let baseUrl = environment.apiUrl;
-    // let baseUrl = "http://localhost:8080";
+    // let baseUrl = environment.apiUrl;
+    const baseUrl = "http://localhost:8080";
 
-    let apiUrl = `${baseUrl}/requestApproval`;
+    const apiUrl = `${baseUrl}/requestApproval`;
     const payload = { raisedBy: emailId, raisedTo: emailId };
     return this.http.post<ApprovalListResponse>(apiUrl, payload);
   }
