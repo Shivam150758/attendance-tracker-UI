@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { environment } from 'src/environments/environment.prod';
 import { ApiCallingService } from 'src/service/API/api-calling.service';
 import { SharedService } from 'src/service/EventEmitter/shared.service';
-import { LoaderService } from 'src/service/Loader/loader.service';
 
 interface ApprovalListResponse {
   raisedByList: any[];
@@ -27,7 +27,7 @@ export class SidenavComponent {
   raisedToList!: any[];
   badgeCount: any;
 
-  constructor(private loader: LoaderService, private sharedService: SharedService,
+  constructor(private router: Router, private sharedService: SharedService,
     private api: ApiCallingService, private http: HttpClient) { }
 
   ngOnInit() {
@@ -36,6 +36,8 @@ export class SidenavComponent {
       const userData = JSON.parse(userDataString);
       this.email = userData.emailId;
       this.admin = userData.admin;
+    } else {
+      this.router.navigateByUrl('/');
     }
     
     this.badgeCount = 0;
