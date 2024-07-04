@@ -36,13 +36,10 @@ export class RequestStatusComponent {
   ngOnInit() {
     this.loader.show();
     let userDataString = sessionStorage.getItem('user');
-    let show = sessionStorage.getItem('Admin');
-    if (show == 'true') {
-      this.admin = true
-    }
     if (userDataString) {
       let userData = JSON.parse(userDataString);
       this.emailId = userData.emailId;
+      this.admin = userData.admin;
     }
     this.getApprovalList(this.emailId).subscribe(
       (response: ApprovalListResponse) => {
@@ -58,8 +55,8 @@ export class RequestStatusComponent {
   }
 
   getApprovalList(emailId: string): Observable<ApprovalListResponse> {
-    // let baseUrl = environment.apiUrl;
-    let baseUrl = "http://localhost:8080";
+    let baseUrl = environment.apiUrl;
+    // let baseUrl = "http://localhost:8080";
 
     let apiUrl = `${baseUrl}/requestApproval`;
     const payload = { raisedBy: emailId, raisedTo: emailId };
@@ -123,5 +120,4 @@ export class RequestStatusComponent {
       width: '800px'
     });
   }
-
 }

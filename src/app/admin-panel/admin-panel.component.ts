@@ -49,6 +49,7 @@ export class AdminPanelComponent {
     12: 'December'
   };
   detailedArray: any;
+  daysInMonth: number[] = [];
 
   constructor(private api: ApiCallingService, private loader: LoaderService, private dialog: MatDialog,
     private router: Router) { }
@@ -71,6 +72,7 @@ export class AdminPanelComponent {
     await this.getCurrentQuarterAndYear();
     await this.loadDistinctYears();
     await this.loadDistinctQuarters();
+    await this.getDistinctMonths();
     let userDataString = sessionStorage.getItem('user');
     if (userDataString) {
       let userData = JSON.parse(userDataString);
@@ -89,6 +91,7 @@ export class AdminPanelComponent {
   }
 
   getData() {
+    this.loader.show()
     this.api.downloadMonthlyAdminReport(this.selectedMonth, this.selectedYear).subscribe({
       next: (attendanceResponse) => {
         if (attendanceResponse) {
@@ -109,7 +112,6 @@ export class AdminPanelComponent {
               };
               return { ...defaultValues, ...user, ...report };
             });
-            console.log(this.mergedArray);
             this.loader.hide();
           },
           error: (error) => {
@@ -210,37 +212,94 @@ export class AdminPanelComponent {
     this.api.distinctMonths().subscribe(observer);
   }
 
-  downloadReport() {
-    this.loader.show();
-    if (this.selectedRadio == "1") {
-      this.api.downloadMonthlyAdminReport(this.selectedMonth, this.selectedYear).subscribe({
-        next: (response) => {
-          if (response) {
-            this.attendanceReportData = response;
-            console.log(this.attendanceReportData)
-            this.downloadMthReportSheet();
-          }
-          this.loader.hide();
-        },
-        error: (error) => {
-          this.loader.hide();
-        }
-      });
-    } else if (this.selectedRadio == "2") {
-      this.api.downloadQtrAdminReport(this.selectedQuarter, this.selectedYear).subscribe({
-        next: (response) => {
-          if (response) {
-            this.attendanceReportData = response;
-            console.log(this.attendanceReportData)
-            this.downloadReportSheet();
-          }
-          this.loader.hide();
-        },
-        error: (error) => {
-          this.loader.hide();
-        }
-      });
+  updateDaysInMonth(): void {
+    this.daysInMonth = [];
+    const date = new Date(this.selectedYear, this.selectedMonth, 0);
+    const days = date.getDate();
+
+    for (let i = 1; i <= days; i++) {
+      this.daysInMonth.push(i);
     }
+
+    this.generateExcel();
+  }
+
+  onYearMonthChange(): void {
+    this.updateDaysInMonth();
+  }
+
+  generateExcel(): void {
+    const ws_data = this.prepareDataForExcel();
+
+    const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet(ws_data);
+    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
+
+    XLSX.writeFile(wb, `Attendance_${this.selectedYear}_${this.monthNames[this.selectedMonth]}.xlsx`);
+  }
+
+  prepareDataForExcel(): any[][] {
+    const ws_data: any[][] = [];
+
+    // Header row with dates
+    const dateRow: string[] = ['Name', 'Manager ID', 'Shift'];
+    const dayRow: string[] = ['', '', ''];
+    for (let day of this.daysInMonth) {
+      const date = new Date(this.selectedYear, this.selectedMonth - 1, day);
+      const formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '-');
+      dateRow.push(formattedDate);
+      dayRow.push(date.toLocaleDateString('en-US', { weekday: 'short' }));
+    }
+
+    ws_data.push(dateRow);
+    ws_data.push(dayRow);
+
+    // Placeholder for user data (fetch and fill in actual data here)
+    const exampleData = [
+      { name: 'John Doe', managerId: 'M001', shift: 'Shift A', attendance: Array(this.daysInMonth.length).fill('Present') },
+      { name: 'Jane Smith', managerId: 'M002', shift: 'Shift B', attendance: Array(this.daysInMonth.length).fill('Absent') }
+    ];
+
+    for (let user of exampleData) {
+      const row = [user.name, user.managerId, user.shift, ...user.attendance];
+      ws_data.push(row);
+    }
+
+    return ws_data;
+  }
+
+  downloadReport() {
+    // this.loader.show();
+    // if (this.selectedRadio == "1") {
+    //   this.api.downloadMonthlyAdminReport(this.selectedMonth, this.selectedYear).subscribe({
+    //     next: (response) => {
+    //       if (response) {
+    //         this.attendanceReportData = response;
+    //         console.log(this.attendanceReportData)
+    //         this.downloadMthReportSheet();
+    //       }
+    //       this.loader.hide();
+    //     },
+    //     error: (error) => {
+    //       this.loader.hide();
+    //     }
+    //   });
+    // } else if (this.selectedRadio == "2") {
+    //   this.api.downloadQtrAdminReport(this.selectedQuarter, this.selectedYear).subscribe({
+    //     next: (response) => {
+    //       if (response) {
+    //         this.attendanceReportData = response;
+    //         console.log(this.attendanceReportData)
+    //         this.downloadReportSheet();
+    //       }
+    //       this.loader.hide();
+    //     },
+    //     error: (error) => {
+    //       this.loader.hide();
+    //     }
+    //   });
+    // }
+    this.updateDaysInMonth();
     this.dialogRef1.close();
   }
 

@@ -34,6 +34,7 @@ export class UserDashboardComponent {
   detailedAttendancePopup!: MatDialogRef<any>;
   username: any;
   team: any;
+  defaultShift: any;
   shift: any;
   oldShift: any;
   attendanceData: any = {
@@ -51,7 +52,14 @@ export class UserDashboardComponent {
   selectedYear: any;
   selectedQuarter: any;
   selectedUser: any;
-  months: string[] = [];
+  months: { [key: string]: string[] } = {
+    "Q1": ['January', 'February', 'March'],
+    "Q2": ['April', 'May', 'June'],
+    "Q3": ['July', 'August', 'September'],
+    "Q4": ['October', 'November', 'December']
+  };
+
+  filteredMonths: string[] = [];
 
   @ViewChild('dialogTemplate')
   dialogTemplate!: TemplateRef<any>;
@@ -86,6 +94,13 @@ export class UserDashboardComponent {
   cappedPercentage: number = 0;
   leftRotation: string = 'rotate(0deg)';
   rightRotation: string = 'rotate(0deg)';
+  monthMapping: { [key: string]: string } = {
+    '1': 'January', '2': 'February', '3': 'March', '4': 'April', '5': 'May', '6': 'June',
+    '7': 'July', '8': 'August', '9': 'September', '10': 'October', '11': 'November', '12': 'December'
+  };
+  allowanceData: { [key: string]: number } = {};
+  allowances: any;
+  filteredShiftOptions: any[] = this.shiftOptions;
 
   constructor(private loader: LoaderService, private router: Router, private sharedService: SharedService,
     private dialog: MatDialog, private api: ApiCallingService) {
@@ -103,25 +118,40 @@ export class UserDashboardComponent {
       await this.getCurrentQuarterAndYear();
       await this.loadDistinctYears();
       await this.loadDistinctQuarters();
-      await this.getSubordinates();
       this.selectedYear = this.currentYear.toString();
       this.selectedQuarter = "Q" + this.currentQuarter;
       let userDataString = sessionStorage.getItem('user');
-      this.admin = sessionStorage.getItem('Admin') === "true";
       if (userDataString) {
         let userData = JSON.parse(userDataString);
         this.username = userData.name;
         this.email = userData.emailId;
         this.selectedUser = this.email;
         this.team = userData.team;
+        this.defaultShift = userData.shift;
         this.shift = userData.shift;
         this.managerId = userData.managerId;
         this.oldShift = userData.shift;
-        this.getUserAttendance();
-      } else {
 
+        try {
+          await this.getUserAttendance();
+          if (userData.admin) {
+            this.admin = true;
+            await this.getSubordinates();
+          }
+        } catch (error) {
+          console.error('Error during initialization:', error);
+        } finally {
+          this.loader.hide();
+        }
+      } else {
+        sessionStorage.removeItem('user');
+        this.router.navigateByUrl('/');
       }
     }
+  }
+
+  filterMonths(): void {
+    this.filteredMonths = this.months[this.selectedQuarter] || [];
   }
 
   updateProgress(number: number) {
@@ -151,53 +181,87 @@ export class UserDashboardComponent {
     }
   }
 
-  getSubordinates() {
-    this.api.getListofSubOrdinates(this.email).subscribe({
-      next: (subordinateResponse) => {
-        this.subOrdinates = subordinateResponse;
-        this.loader.hide();
-      },
-      error: (error) => {
-        console.error("Error fetching subordinates list:", error);
-        this.loader.hide();
-      }
+  getSubordinates(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.loader.show();
+      this.api.getListofSubOrdinates(this.email).subscribe({
+        next: (subordinateResponse) => {
+          this.subOrdinates = [];
+          const hardCodedEmail = {
+            "id": this.email,
+            "emailId": this.email,
+            "name": this.username
+          };
+          this.subOrdinates.push(hardCodedEmail);
+          if (Array.isArray(subordinateResponse)) {
+            this.subOrdinates.push(...subordinateResponse);
+          }
+          resolve();
+          this.loader.hide();
+        },
+        error: (error) => {
+          console.error("Error fetching subordinates list:", error);
+          this.loader.hide();
+          reject(error);
+        }
+      });
     });
   }
 
-  getUserAttendance() {
-    this.loader.show();
-    if (this.selectedQuarter == 'Q1') {
-      this.months = ['January', 'February', 'March']
-    } else if (this.selectedQuarter == 'Q2') {
-      this.months = ['April', 'May', 'June']
-    } else if (this.selectedQuarter == 'Q3') {
-      this.months = ['July', 'August', 'September']
-    } else if (this.selectedQuarter == 'Q4') {
-      this.months = ['October', 'November', 'December']
-    }
-    this.api.getUserAttendance(this.selectedUser, this.selectedYear, this.selectedQuarter).subscribe({
-      next: (response) => {
-        if (response) {
-          this.attendanceData = response;
-          this.number = response.wfh;
-          this.remaining = 13 - this.number;
-          this.updateProgress(this.number);
-        } else {
-          this.attendanceData = {
-            wfo: 0,
-            leaves: 0,
-            holidays: 0,
-            wfhFriday: 0,
-            wfoFriday: 0,
-            number: 0
-          };
+  getUserAttendance(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.loader.show();
+      this.api.getUserAttendance(this.selectedUser, this.selectedYear, this.selectedQuarter).subscribe({
+        next: (response) => {
+          if (response) {
+            this.attendanceData = response;
+            this.number = response.wfh;
+            this.remaining = 13 - this.number;
+            this.updateProgress(this.number);
+            this.api.userMonthlyAllowanceData(this.selectedUser, this.selectedYear, this.selectedQuarter).subscribe({
+              next: (_response) => {
+                this.allowances = _response;
+                this.filterMonths();
+                this.transformData();
+                resolve();
+                this.loader.hide();
+              },
+              error: (_error) => {
+                this.loader.hide();
+                reject(_error);
+              }
+            });
+          } else {
+            this.attendanceData = {
+              wfo: 0,
+              leaves: 0,
+              holidays: 0,
+              wfhFriday: 0,
+              wfoFriday: 0,
+              number: 0
+            };
+            resolve();
+            this.loader.hide();
+          }
+        },
+        error: (error) => {
+          this.loader.hide();
+          reject(error);
         }
-        this.loader.hide();
-      },
-      error: (error) => {
-        this.loader.hide();
-      }
+      });
     });
+  }
+
+
+  transformData(): void {
+    this.allowanceData = {};
+    for (let allowance of this.allowances) {
+      const monthName = this.monthMapping[allowance.month];
+      if (!this.allowanceData[monthName]) {
+        this.allowanceData[monthName] = 0;
+      }
+      this.allowanceData[monthName] += allowance.allowance + allowance.foodAllowance;
+    }
   }
 
   getCurrentQuarterAndYear(): Promise<void> {
@@ -259,37 +323,45 @@ export class UserDashboardComponent {
     let allowance = 0;
     let foodAllowance = 0;
 
-    if (this.shift == "Shift A") {
+    if (this.selectedAttendance == 'Public Holiday' || this.selectedAttendance == 'Leave') {
       allowance = 0;
       foodAllowance = 0;
-    } else if (this.shift == "Shift B") {
-      allowance = 150;
-      foodAllowance = 100;
-    } else if (this.shift == "Shift C") {
-      allowance = 250;
-      foodAllowance = 100;
-    } else if (this.shift == "Shift D") {
-      allowance = 350;
-      foodAllowance = 100;
-    } else if (this.shift == "Shift F") {
-      allowance = 250;
-      foodAllowance = 0;
+    } else {
+      if (this.shift == "Shift A") {
+        allowance = 0;
+        foodAllowance = 0;
+      } else if (this.shift == "Shift B") {
+        allowance = 150;
+        foodAllowance = 100;
+      } else if (this.shift == "Shift C") {
+        allowance = 250;
+        foodAllowance = 100;
+      } else if (this.shift == "Shift D") {
+        allowance = 350;
+        foodAllowance = 100;
+      } else if (this.shift == "Shift F") {
+        allowance = 250;
+        foodAllowance = 0;
+      }
     }
 
+    this.loader.show();
     this.api.attendance(this.email, this.email, this.formattedDate, this.selectedAttendance, year.toString(),
       "Q" + quarter, (month + 1).toString(), this.email, this.time.toString(), this.shift, allowance, foodAllowance).subscribe({
         next: (response) => {
+          this.loader.show();
           this.api.addUserAttendance(this.email, this.email, this.selectedAttendance, year.toString(),
             "Q" + quarter, this.username).subscribe({
               next: (response) => {
+                this.loader.show();
                 this.api.addMonthlyAttendance(this.email, this.email, this.selectedAttendance, year.toString(),
                   "Q" + quarter, this.username, (month + 1).toString(), allowance, foodAllowance).subscribe({
                     next: (response) => {
-                      this.loader.hide();
                       let currentUrl = this.router.url;
                       this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
                         this.router.navigate([currentUrl]);
                       });
+                      this.loader.hide();
                     },
                     error: (error) => {
                       this.loader.hide();
@@ -355,6 +427,10 @@ export class UserDashboardComponent {
 
   dateChanged(event: MatDatepickerInputEvent<Date>) {
     this.selectedDate = event.value;
+    this.selectedAttendance = null;
+    this.filteredShiftOptions = this.shiftOptions;
+    this.shift = this.defaultShift;
+    this.shiftOptions = ['Shift A', 'Shift B', 'Shift C', 'Shift D', 'Shift F'];
     if (this.selectedDate) {
       const dayOfWeek = this.selectedDate.getDay();
       const dayName = this.days[dayOfWeek];
@@ -368,8 +444,25 @@ export class UserDashboardComponent {
     }
   }
 
+  onAttendanceChange(): void {
+    if (this.selectedAttendance === 'Leave') {
+      this.filteredShiftOptions = ['Absent'];
+      this.shiftOptions = ['Absent'];
+      this.shift = 'Absent';
+    } else if (this.selectedAttendance === 'Public Holiday') {
+      this.filteredShiftOptions = ['Holiday'];
+      this.shiftOptions = ['Holiday'];
+      this.shift = 'Holiday';
+    } else {
+      this.shiftOptions = ['Shift A', 'Shift B', 'Shift C', 'Shift D', 'Shift F'];
+      this.filteredShiftOptions = this.shiftOptions.filter(option => option !== 'Holiday' && option !== 'Absent');
+      this.shift = this.defaultShift;
+    }
+  }
+
   categoryAttendance(attendance: string) {
     if (attendance == 'Attendance') {
+      this.loader.show();
       this.api.getDetailedAttendanceQtr(this.selectedUser, this.selectedYear, this.selectedQuarter).subscribe({
         next: (response) => {
           this.detailedArray = response;
@@ -380,6 +473,7 @@ export class UserDashboardComponent {
         }
       });
     } else {
+      this.loader.show();
       this.api.getCategoryAttendance(this.email, this.selectedQuarter, this.selectedYear, attendance
       ).subscribe({
         next: (response) => {
@@ -472,6 +566,7 @@ export class UserDashboardComponent {
       newShift: this.shift
     };
 
+    this.loader.show();
     this.api.checkAttendanceDuplicate(this.email, this.formattedDate).subscribe({
       next: (response) => {
         if (response.status === "Not Exist") {

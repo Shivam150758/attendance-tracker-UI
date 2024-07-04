@@ -4,14 +4,9 @@
     <div class="content-wrapper">
         <app-sidenav></app-sidenav>
         <div class="content">
-            <div class="buttonDiv">
-                <span class="tableTitle">User List</span>
-                <button class="matButton" mat-raised-button color="primary"
-                    (click)="downloadReportPopUp()"><mat-icon>get_app</mat-icon>Download Report</button>
-            </div>
-            <!-- <div class="dropdowns">
+            <div class="dropdowns">
                 <div class="form-field">
-                    <mat-form-field appearance="outline">
+                    <mat-form-field class="dropdown" appearance="outline">
                         <mat-label>Year</mat-label>
                         <mat-select [(ngModel)]="selectedYear" (selectionChange)="getData()">
                             <mat-option *ngFor="let year of distinctYears" [value]="year">{{year}}</mat-option>
@@ -25,8 +20,11 @@
                         </mat-select>
                     </mat-form-field>
                 </div>
-            </div> -->
-            <div style="border: 1px solid black;" class="table-container">
+            </div>
+            <!-- <span class="tableTitle">User List</span> -->
+            <!-- <button class="matButton" mat-raised-button color="primary"
+                    (click)="downloadReportPopUp()"><mat-icon>get_app</mat-icon>Download Report</button> -->
+            <div style="border: 1px solid rgb(185, 185, 185);" class="table-container">
                 <table>
                     <thead>
                         <tr>
