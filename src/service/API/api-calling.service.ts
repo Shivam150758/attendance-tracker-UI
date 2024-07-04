@@ -10,8 +10,8 @@ import { environment } from 'src/environments/environment.prod';
 })
 export class ApiCallingService {
 
-  // private baseUrl = environment.apiUrl;
-  private baseUrl = "http://localhost:8080"
+  private baseUrl = environment.apiUrl;
+  // private baseUrl = "http://localhost:8080"
 
   private loginUrl = `${this.baseUrl}/login`;
   private markAttendance = `${this.baseUrl}/addAttendance`;

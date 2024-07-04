@@ -58,8 +58,8 @@ export class SidenavComponent {
   }
 
   getApprovalList(emailId: string): Observable<ApprovalListResponse> {
-    // let baseUrl = environment.apiUrl;
-    const baseUrl = "http://localhost:8080";
+    const baseUrl = environment.apiUrl;
+    // const baseUrl = "http://localhost:8080";
 
     const apiUrl = `${baseUrl}/requestApproval`;
     const payload = { raisedBy: emailId, raisedTo: emailId };
