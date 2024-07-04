@@ -28,14 +28,14 @@ export class SidenavComponent {
   constructor(private loader: LoaderService, private sharedService: SharedService,
     private api: ApiCallingService, private http: HttpClient) { }
 
-  ngOnInit() {
+  async ngOnInit() {
+    this.loader.show();
     let userDataString = sessionStorage.getItem('user');
-    this.admin = sessionStorage.getItem('Admin') === "true";
     if (userDataString) {
       let userData = JSON.parse(userDataString);
       this.email = userData.emailId;
     }
-    this.api.getListofSubOrdinates(this.email).subscribe({
+    await this.api.getListofSubOrdinates(this.email).subscribe({
       next: (subordinateResponse) => {
         sessionStorage.setItem('subOrdinates', JSON.stringify(subordinateResponse));
         if (Array.isArray(subordinateResponse) && subordinateResponse.length > 0) {
@@ -44,13 +44,15 @@ export class SidenavComponent {
           sessionStorage.setItem('Admin', "false");
         }
         this.admin = sessionStorage.getItem('Admin') === "true";
+        this.loader.hide();
       },
       error: (error) => {
         console.error("Error fetching subordinates list:", error);
+        this.loader.hide();
       }
     });
     this.badgeCount = 0;
-    this.getApprovalList(this.email).subscribe(
+    await this.getApprovalList(this.email).subscribe(
       (response: ApprovalListResponse) => {
         this.raisedByList = response.raisedByList;
         this.raisedToList = response.raisedToList;
@@ -59,16 +61,18 @@ export class SidenavComponent {
             this.badgeCount++;
           }
         });
+        this.loader.hide();
       },
       (error: any) => {
         console.error("Error fetching approval list:", error);
+        this.loader.hide();
       }
     );
   }
 
   getApprovalList(emailId: string): Observable<ApprovalListResponse> {
-    let baseUrl = environment.apiUrl;
-    // let baseUrl = "http://localhost:8080";
+    // let baseUrl = environment.apiUrl;
+    let baseUrl = "http://localhost:8080";
 
     let apiUrl = `${baseUrl}/requestApproval`;
     const payload = { raisedBy: emailId, raisedTo: emailId };

@@ -8,9 +8,9 @@ import { environment } from 'src/environments/environment.prod';
 })
 export class ApiCallingService {
 
-  private baseUrl = environment.apiUrl;
+  // private baseUrl = environment.apiUrl;
 
-  // private baseUrl = "http://localhost:8080"
+  private baseUrl = "http://localhost:8080"
 
   private loginUrl = `${this.baseUrl}/login`;
   private markAttendance = `${this.baseUrl}/addAttendance`;
@@ -33,7 +33,6 @@ export class ApiCallingService {
   private sendRequest = `${this.baseUrl}/saveForApproval`;
   private updateAttendance = `${this.baseUrl}/updateAttendance`;
   private checkAttendance = `${this.baseUrl}/checkAttendance`;
-  private userAllowance = `${this.baseUrl}/userAllowance`;
 
   constructor(private http: HttpClient) { }
 
@@ -158,9 +157,5 @@ export class ApiCallingService {
 
   checkAttendanceDuplicate(Id: string, date: string): Observable<any> {
     return this.http.post(this.checkAttendance, { id: Id + date });
-  }
-
-  userMonthlyAllowanceData(email: string, year: string, quarter: string): Observable<any> {
-    return this.http.post(this.userAllowance, { emailId: email, year: year, quarter: quarter });
   }
 }

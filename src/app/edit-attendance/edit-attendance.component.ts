@@ -183,12 +183,6 @@ export class EditAttendanceComponent {
       this.options = ['Work From Office', 'Work From Home', 'Leave', 'Public Holiday'];
     }
 
-    if(item.attendance == 'Leave') {
-      this.shiftOptions = ['Absent']
-    } else if(item.attendance == 'Public Holiday') {
-      this.shiftOptions = ['Holiday']
-    }
-
     this.dialogRef = this.dialog.open(this.editDialog, {
       width: '950px',
     });
@@ -267,19 +261,6 @@ export class EditAttendanceComponent {
           this.loader.hide();
         }
       });
-    }
-  }
-
-  onAttendanceChange(): void {
-    if (this.popUpAttendance === 'Leave') {
-      this.shiftOptions = ['Absent'];
-      this.popUpShift = 'Absent';
-    } else if (this.popUpAttendance === 'Public Holiday') {
-      this.shiftOptions = ['Holiday'];
-      this.popUpShift = 'Holiday';
-    } else {
-      this.shiftOptions = ['Shift A', 'Shift B', 'Shift C', 'Shift D', 'Shift F'];
-      this.popUpShift = null;
     }
   }
 }

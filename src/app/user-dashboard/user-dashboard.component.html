@@ -129,9 +129,9 @@
                             </div>
                             <div class="footer">
                                 <table class="allowanceTable">
-                                    <tr *ngFor="let month of filteredMonths">
+                                    <tr *ngFor="let month of months">
                                         <th style="text-align: left;">{{ month }} {{selectedYear}}</th>
-                                        <td>{{ allowanceData[month] || 0 }}</td>
+                                        <td>3000</td>
                                     </tr>
                                 </table>
                             </div>
@@ -164,8 +164,7 @@
 
             <mat-form-field class="example-full-width" appearance="outline">
                 <mat-label>Select Attendance</mat-label>
-                <mat-select [(ngModel)]="selectedAttendance" [disabled]="!selectedDate"
-                    (selectionChange)="onAttendanceChange()">
+                <mat-select [(ngModel)]="selectedAttendance" [disabled]="!selectedDate">
                     <ng-container *ngFor="let option of options">
                         <mat-option [value]="option">{{ option }}</mat-option>
                     </ng-container>
