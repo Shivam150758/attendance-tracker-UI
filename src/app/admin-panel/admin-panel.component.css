@@ -25,17 +25,13 @@
     padding: 16px;
 }
 
-.dropdown {
-    margin-right: 20px;
-}
-
 .table-container {
     width: 100%;
-    height: 80vh;
-    max-height: 80vh;
+    height: 83vh;
+    max-height: 83vh;
     overflow-y: auto;
     overflow-x: hidden;
-    /* margin-bottom: 16px; */
+    margin-bottom: 16px;
 }
 
 .table-container table {
@@ -111,15 +107,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0px;
-}
-
-.form-field {
-    flex: 1;
-    display: flex;
-    justify-content: flex-start;
-    min-width: 200px;
-    max-width: 300px;
+    margin-bottom: 10px;
 }
 
 .dropdown {
