@@ -36,10 +36,13 @@ export class RequestStatusComponent {
   ngOnInit() {
     this.loader.show();
     let userDataString = sessionStorage.getItem('user');
+    let show = sessionStorage.getItem('Admin');
+    if (show == 'true') {
+      this.admin = true
+    }
     if (userDataString) {
       let userData = JSON.parse(userDataString);
       this.emailId = userData.emailId;
-      this.admin = userData.admin;
     }
     this.getApprovalList(this.emailId).subscribe(
       (response: ApprovalListResponse) => {

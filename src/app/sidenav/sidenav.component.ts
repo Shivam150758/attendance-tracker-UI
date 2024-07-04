@@ -30,12 +30,25 @@ export class SidenavComponent {
 
   ngOnInit() {
     let userDataString = sessionStorage.getItem('user');
+    this.admin = sessionStorage.getItem('Admin') === "true";
     if (userDataString) {
       let userData = JSON.parse(userDataString);
       this.email = userData.emailId;
-      this.admin = userData.admin;
     }
-    
+    this.api.getListofSubOrdinates(this.email).subscribe({
+      next: (subordinateResponse) => {
+        sessionStorage.setItem('subOrdinates', JSON.stringify(subordinateResponse));
+        if (Array.isArray(subordinateResponse) && subordinateResponse.length > 0) {
+          sessionStorage.setItem('Admin', "true");
+        } else {
+          sessionStorage.setItem('Admin', "false");
+        }
+        this.admin = sessionStorage.getItem('Admin') === "true";
+      },
+      error: (error) => {
+        console.error("Error fetching subordinates list:", error);
+      }
+    });
     this.badgeCount = 0;
     this.getApprovalList(this.email).subscribe(
       (response: ApprovalListResponse) => {

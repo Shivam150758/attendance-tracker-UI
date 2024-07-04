@@ -74,7 +74,6 @@ export class LoginPageComponent {
         this.api.login(email, password).subscribe({
           next: (response) => {
             sessionStorage.setItem('auth', 'Authorized');
-            sessionStorage.setItem('Admin', 'true')
             sessionStorage.setItem('user', JSON.stringify(response));
             this.router.navigateByUrl("/user-dashboard")
             this.loader.hide();
