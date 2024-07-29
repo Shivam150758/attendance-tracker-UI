@@ -19,7 +19,7 @@
     "@angular/material": "^17.3.4",
     "@angular/platform-browser": "^17.3.4",
     "@angular/platform-browser-dynamic": "^17.3.4",
-    "@angular/router": "^17.3.4",
+    "@angular/router": "^17.3.12",
     "angular-moment-timezone": "^1.7.1",
     "bootstrap": "^5.3.3",
     "chart.js": "^4.4.2",

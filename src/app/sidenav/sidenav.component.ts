@@ -3,7 +3,6 @@ import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { environment } from 'src/environments/environment.prod';
 import { ApiCallingService } from 'src/service/API/api-calling.service';
 import { SharedService } from 'src/service/EventEmitter/shared.service';
