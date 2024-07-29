@@ -34,32 +34,11 @@ import { MatBadgeModule } from '@angular/material/badge';
 
 const routes: Routes = [
   { path: '', component: LoginPageComponent },
+  { path: 'user-dashboard', component: UserDashboardComponent },
+  { path: 'admin-panel', component: AdminPanelComponent },
   { path: 'rest-password', component: ResetPasswordComponent },
-  {
-    path: 'user-dashboard',
-    loadComponent: () => import('./user-dashboard/user-dashboard.component').then(m => m.UserDashboardComponent)
-  },
-  {
-    path: 'request-status',
-    loadComponent: () => import('./request-status/request-status.component').then(m => m.RequestStatusComponent)
-  },
-  {
-    path: 'admin-panel',
-    loadComponent: () => import('./admin-panel/admin-panel.component').then(m => m.AdminPanelComponent)
-  },
-  {
-    path: 'edit-attendance',
-    loadComponent: () => import('./edit-attendance/edit-attendance.component').then(m => m.EditAttendanceComponent)
-  },
-  {
-    path: '',
-    redirectTo: '/',
-    pathMatch: 'full'
-  },
-  {
-    path: '**',
-    redirectTo: '/'
-  }
+  { path: 'edit-attendance', component: EditAttendanceComponent },
+  { path: 'request-status', component: RequestStatusComponent }
 ];
 
 @NgModule({
