@@ -415,7 +415,7 @@ export class UserDashboardComponent {
 
     const isWeekend = (d.getDay() === 0 || d.getDay() === 6);
     const isAfterToday = d > today;
-    const isBeforeStart = d < new Date(2024, 3, 1);
+    const isBeforeStart = d < new Date(2024, 4, 1);
     const isSpecificDisabledDate = specificDisabledDates.some(disabledDate =>
       d.getFullYear() === disabledDate.getFullYear() &&
       d.getMonth() === disabledDate.getMonth() &&
@@ -437,9 +437,9 @@ export class UserDashboardComponent {
       const dayName = this.days[dayOfWeek];
 
       if (dayName === 'Friday') {
-        this.options = ['Work From Home - Friday', 'Work From Office - Friday', 'Leave', 'Public Holiday'];
+        this.options = ['Work From Home - Friday', 'Work From Office - Friday', 'Leave'];
       } else {
-        this.options = ['Work From Office', 'Work From Home', 'Leave', 'Public Holiday']
+        this.options = ['Work From Office', 'Work From Home', 'Leave']
       }
     } else { /* empty */ }
   }

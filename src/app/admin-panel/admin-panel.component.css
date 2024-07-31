@@ -35,7 +35,6 @@
     max-height: 80vh;
     overflow-y: auto;
     overflow-x: hidden;
-    /* margin-bottom: 16px; */
 }
 
 .table-container table {
@@ -186,4 +185,8 @@
 .popupButton2 {
     font-size: 16px;
     padding: 6px 12px;
+}
+
+.matButton {
+    margin-top: -15px;
 }

@@ -20,6 +20,7 @@ export class ApiCallingService {
   private detailedAttendanceQtr = `${this.baseUrl}/detailedAttendanceQtr`;
   private attendanceCategory = `${this.baseUrl}/attendanceCategory`;
   private allUsers = `${this.baseUrl}/allUsers`;
+  private allUserAttendance = `${this.baseUrl}/allAttendance`;
   private downloadQtrAttendace = `${this.baseUrl}/adminQtrReport`;
   private downloadMthAttendace = `${this.baseUrl}/adminMthReport`;
   private distinctYears = `${this.baseUrl}/distinctYears`;
@@ -34,6 +35,7 @@ export class ApiCallingService {
   private updateAttendance = `${this.baseUrl}/updateAttendance`;
   private checkAttendance = `${this.baseUrl}/checkAttendance`;
   private userAllowance = `${this.baseUrl}/userAllowance`;
+  private downloadExcelSheet = `${this.baseUrl}/download/excel`;
 
   constructor(private http: HttpClient) { }
 
@@ -69,8 +71,12 @@ export class ApiCallingService {
     return this.http.post(this.attendanceCategory, { emailId: email, quarter: qtr, year: year, attendance: attendance });
   }
 
-  getAllUsers() {
+  getAllUsers(): Observable<any> {
     return this.http.get(this.allUsers);
+  }
+
+  getAllAttendance(): Observable<any> {
+    return this.http.get(this.allUserAttendance);
   }
 
   downloadQtrAdminReport(qtr: string, year: string) {
@@ -162,5 +168,9 @@ export class ApiCallingService {
 
   userMonthlyAllowanceData(email: string, year: string, quarter: string): Observable<any> {
     return this.http.post(this.userAllowance, { emailId: email, year: year, quarter: quarter });
+  }
+
+  downloadExcel(year: number, month: number): Observable<Blob> {
+    return this.http.get(`${this.downloadExcelSheet}?year=${year}&month=${month}`, { responseType: 'blob' });
   }
 }

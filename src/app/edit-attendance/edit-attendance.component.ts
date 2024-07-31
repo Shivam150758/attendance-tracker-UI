@@ -179,9 +179,9 @@ export class EditAttendanceComponent {
     this.popUpShift = item.shift;
     this.oldPopUpShift = this.popUpShift;
     if (week === 'Friday') {
-      this.options = ['Work From Home - Friday', 'Work From Office - Friday', 'Leave', 'Public Holiday'];
+      this.options = ['Work From Home - Friday', 'Work From Office - Friday', 'Leave'];
     } else {
-      this.options = ['Work From Office', 'Work From Home', 'Leave', 'Public Holiday'];
+      this.options = ['Work From Office', 'Work From Home', 'Leave'];
     }
 
     if (item.attendance == 'Leave') {

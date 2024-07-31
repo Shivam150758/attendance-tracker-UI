@@ -4,8 +4,6 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { ApiCallingService } from 'src/service/API/api-calling.service';
 import { LoaderService } from 'src/service/Loader/loader.service';
 import * as moment from 'moment-timezone';
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
 import { Router } from '@angular/router';
 
 @Component({
@@ -221,7 +219,6 @@ export class AdminPanelComponent {
     for (let i = 1; i <= days; i++) {
       this.daysInMonth.push(i);
     }
-
     this.generateExcel();
   }
 
@@ -230,165 +227,25 @@ export class AdminPanelComponent {
   }
 
   generateExcel(): void {
-    const ws_data = this.prepareDataForExcel();
+    const year = this.selectedYear;
+    const month = this.selectedMonth;
 
-    const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet(ws_data);
-    const wb: XLSX.WorkBook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
-
-    XLSX.writeFile(wb, `Attendance_${this.selectedYear}_${this.monthNames[this.selectedMonth]}.xlsx`);
+    this.api.downloadExcel(year, month).subscribe({
+      next: (blob) => this.saveFile(blob, `Attendance_${year}_${month}.xlsx`),
+      error: (error) => console.error('Download failed:', error)
+    });
   }
 
-  prepareDataForExcel(): any[][] {
-    const ws_data: any[][] = [];
-
-    // Header row with dates
-    const dateRow: string[] = ['Name', 'Manager ID', 'Shift'];
-    const dayRow: string[] = ['', '', ''];
-    for (const day of this.daysInMonth) {
-      const date = new Date(this.selectedYear, this.selectedMonth - 1, day);
-      const formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '-');
-      dateRow.push(formattedDate);
-      dayRow.push(date.toLocaleDateString('en-US', { weekday: 'short' }));
-    }
-
-    ws_data.push(dateRow);
-    ws_data.push(dayRow);
-
-    const exampleData = [
-      { name: 'John Doe', managerId: 'M001', shift: 'Shift A', attendance: Array(this.daysInMonth.length).fill('Present') },
-      { name: 'Jane Smith', managerId: 'M002', shift: 'Shift B', attendance: Array(this.daysInMonth.length).fill('Absent') }
-    ];
-
-    for (const user of exampleData) {
-      const row = [user.name, user.managerId, user.shift, ...user.attendance];
-      ws_data.push(row);
-    }
-
-    return ws_data;
+  private saveFile(blob: Blob, fileName: string): void {
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.download = fileName;
+    link.click();
+    window.URL.revokeObjectURL(link.href);
   }
 
   downloadReport() {
-    // this.loader.show();
-    // if (this.selectedRadio == "1") {
-    //   this.api.downloadMonthlyAdminReport(this.selectedMonth, this.selectedYear).subscribe({
-    //     next: (response) => {
-    //       if (response) {
-    //         this.attendanceReportData = response;
-    //         console.log(this.attendanceReportData)
-    //         this.downloadMthReportSheet();
-    //       }
-    //       this.loader.hide();
-    //     },
-    //     error: (error) => {
-    //       this.loader.hide();
-    //     }
-    //   });
-    // } else if (this.selectedRadio == "2") {
-    //   this.api.downloadQtrAdminReport(this.selectedQuarter, this.selectedYear).subscribe({
-    //     next: (response) => {
-    //       if (response) {
-    //         this.attendanceReportData = response;
-    //         console.log(this.attendanceReportData)
-    //         this.downloadReportSheet();
-    //       }
-    //       this.loader.hide();
-    //     },
-    //     error: (error) => {
-    //       this.loader.hide();
-    //     }
-    //   });
-    // }
     this.updateDaysInMonth();
     this.dialogRef1.close();
-  }
-
-  downloadMthReportSheet() {
-    const exportData = this.attendanceReportData.map((item: { year: any; month: any; name: any; emailId: any; wfh: any; wfo: any; wfhFriday: any; wfoFriday: any; leaves: any; holidays: any; }) => ({
-      'Year': item.year,
-      'Month': this.monthNames[item.month],
-      'Name': item.name,
-      'Email Id': item.emailId,
-      'Work From Home': item.wfh,
-      'Work From Office': item.wfo,
-      'Work From Home - Friday': item.wfhFriday,
-      'Work From Office - Friday': item.wfoFriday,
-      'Leaves': item.leaves,
-      'Public Holidays': item.holidays
-    }));
-
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(exportData);
-
-    ws['!autofilter'] = { ref: `A1:J${exportData.length + 1}` };
-
-    const header = ['Year', 'Month', 'Name', 'Email Id', 'Work From Home', 'Work From Office', 'Work From Home - Friday', 'Work From Office - Friday',
-      'Leaves', 'Public Holidays'];
-    XLSX.utils.sheet_add_aoa(ws, [header], { origin: "A1" });
-
-    ws['!cols'] = [
-      { wch: 7 },
-      { wch: 10 },
-      { wch: 25 },
-      { wch: 20 },
-      { wch: 17 },
-      { wch: 17 },
-      { wch: 24 },
-      { wch: 24 },
-      { wch: 9 },
-      { wch: 15 }
-    ];
-
-    XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
-
-    const excelBuffer: any = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    this.saveAsExcelFile(excelBuffer, this.monthNames[this.selectedMonth] + '_' + this.selectedYear + '_' + "Attendance_Report");
-  }
-
-  downloadReportSheet() {
-    const exportData = this.attendanceReportData.map((item: { year: any; quarter: any; name: any; emailId: any; wfh: any; wfo: any; wfhFriday: any; wfoFriday: any; leaves: any; holidays: any; }) => ({
-      'Year': item.year,
-      'Quarter': item.quarter,
-      'Name': item.name,
-      'Email Id': item.emailId,
-      'Work From Home': item.wfh,
-      'Work From Office': item.wfo,
-      'Work From Home - Friday': item.wfhFriday,
-      'Work From Office - Friday': item.wfoFriday,
-      'Leaves': item.leaves,
-      'Public Holidays': item.holidays
-    }));
-
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(exportData);
-
-    ws['!autofilter'] = { ref: `A1:J${exportData.length + 1}` };
-
-    const header = ['Year', 'Quarter', 'Name', 'Email Id', 'Work From Home', 'Work From Office', 'Work From Home - Friday', 'Work From Office - Friday',
-      'Leaves', 'Public Holidays'];
-    XLSX.utils.sheet_add_aoa(ws, [header], { origin: "A1" });
-
-    ws['!cols'] = [
-      { wch: 7 },
-      { wch: 9 },
-      { wch: 25 },
-      { wch: 20 },
-      { wch: 17 },
-      { wch: 17 },
-      { wch: 24 },
-      { wch: 24 },
-      { wch: 9 },
-      { wch: 15 }
-    ];
-
-    XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
-
-    const excelBuffer: any = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    this.saveAsExcelFile(excelBuffer, this.selectedQuarter + '_' + this.selectedYear + '_' + "Attendance_Report");
-  }
-
-  saveAsExcelFile(buffer: any, fileName: string): void {
-    const data: Blob = new Blob([buffer], { type: this.EXCEL_TYPE });
-    saveAs(data, fileName + this.EXCEL_EXTENSION);
   }
 }

@@ -6,7 +6,6 @@ import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { ApiCallingService } from 'src/service/API/api-calling.service';
 import { LoaderService } from 'src/service/Loader/loader.service';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { environment } from 'src/environments/environment.prod';
 
 interface ApprovalListResponse {
