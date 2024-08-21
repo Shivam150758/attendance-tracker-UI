@@ -8,7 +8,7 @@
         </li>
         <li *ngIf="admin">
             <a routerLink="/request-status">
-                <mat-icon matBadge="{{ badgeCount }}" matBadgeColor="warn"
+                <mat-icon [matBadge]="badgeCount > 0 ? badgeCount : null" matBadgeColor="warn"
                     matBadgeClass="custom-badge">assignment_turned_in</mat-icon>
             </a>
         </li>

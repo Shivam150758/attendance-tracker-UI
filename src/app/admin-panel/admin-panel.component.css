@@ -25,16 +25,13 @@
     padding: 16px;
 }
 
-.dropdown {
-    margin-right: 20px;
-}
-
 .table-container {
     width: 100%;
-    height: 80vh;
-    max-height: 80vh;
+    height: 60vh;
+    max-height: 60vh;
     overflow-y: auto;
     overflow-x: hidden;
+    margin-top: 10px;
 }
 
 .table-container table {
@@ -106,27 +103,6 @@
     margin-bottom: 10px;
 }
 
-.dropdowns {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0px;
-}
-
-.form-field {
-    flex: 1;
-    display: flex;
-    justify-content: flex-start;
-    min-width: 200px;
-    max-width: 300px;
-}
-
-.dropdown {
-    width: 220px;
-    display: flex;
-    flex-direction: column;
-}
-
 .tableTitle {
     font-size: 18px;
     font-weight: bold;
@@ -189,4 +165,75 @@
 
 .matButton {
     margin-top: -15px;
+}
+
+.todaysSection {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    /* padding: 10px; */
+    border-radius: 8px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+
+.sectionItem {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px;
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.sectionText {
+    font-weight: bold;
+    color: #333;
+}
+
+.sectionCount {
+    color: #007bff;
+    cursor: pointer;
+}
+
+.sectionHeader {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.center-align {
+    text-align: center;
+}
+
+.popupTableHeader {
+    font-size: 18px;
+    background-color: #5D54A4;
+    color: white;
+    padding: 15px;
+}
+
+.header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.sectionHeader {
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.matButton {
+    margin-top: 2px;
+}
+
+.form-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.form-field {
+    flex: 1;
 }

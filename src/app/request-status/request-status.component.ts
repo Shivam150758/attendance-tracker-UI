@@ -69,7 +69,16 @@ export class RequestStatusComponent {
     this.loader.show();
     this.api.updateAttendanceApproval(item).subscribe({
       next: () => {
-        this.loader.hide()
+        if (item.type == "Leave") {
+          this.api.updateUserLeave(item.raisedBy).subscribe({
+            next: () => {
+              console.log("Leaves Updated");
+            }, error: (error) => {
+              console.error("Something went wrong: ", error);
+            }
+          })
+        }
+        this.refreshPage();
       },
       error: (error) => {
         console.error("Error during API call:", error);
@@ -85,6 +94,7 @@ export class RequestStatusComponent {
     this.api.updateAttendanceApproval(item).subscribe({
       next: () => {
         this.loader.hide()
+        this.refreshPage();
       },
       error: (error) => {
         console.error("Error during API call:", error);
@@ -118,6 +128,13 @@ export class RequestStatusComponent {
       panelClass: 'custom-dialog-container',
       disableClose: true,
       width: '800px'
+    });
+  }
+
+  refreshPage() {
+    const currentUrl = this.router.url;
+    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+      this.router.navigate([currentUrl]);
     });
   }
 }

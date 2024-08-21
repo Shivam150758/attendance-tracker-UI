@@ -7,7 +7,6 @@ import { SharedService } from 'src/service/EventEmitter/shared.service';
 import { Subscription } from 'rxjs';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { ThemePalette, provideNativeDateAdapter } from '@angular/material/core';
-import { MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { ApiCallingService } from 'src/service/API/api-calling.service';
 import { MatSort } from '@angular/material/sort';
 import { ProgressSpinnerMode } from '@angular/material/progress-spinner';
@@ -23,9 +22,8 @@ export class UserDashboardComponent {
   currentQuarter!: number;
   currentYear!: number;
   private subscription: Subscription;
-  selectedDate: Date | null = null;
   selectedAttendance: any;
-  options: any[] = [];
+  options: any[] = ['Work From Office', 'Work From Home', 'Leave'];
   shiftOptions: any[] = ['Shift A', 'Shift B', 'Shift C', 'Shift D', 'Shift F'];
   number: number = 0;
   remaining: any = 0;
@@ -89,7 +87,9 @@ export class UserDashboardComponent {
   approvalError: boolean = false;
   subOrdinates: any;
   admin: boolean = false;
-
+  startDate: Date | null = null;
+  endDate: Date | null = null;
+  workFromHomeDays: { date: Date, label: string }[] = [];
   maxNumber: number = 13;
   percentage: number = 0;
   cappedPercentage: number = 0;
@@ -102,6 +102,11 @@ export class UserDashboardComponent {
   allowanceData: { [key: string]: number } = {};
   allowances: any;
   filteredShiftOptions: any[] = this.shiftOptions;
+  approvalMessage: boolean = false;
+  wfhNumber!: number;
+  leaves!: number;
+  isSaveDisabled: boolean = true;
+  showDummy: boolean = false;
 
   constructor(private loader: LoaderService, private router: Router, private sharedService: SharedService,
     private dialog: MatDialog, private api: ApiCallingService) {
@@ -135,6 +140,7 @@ export class UserDashboardComponent {
 
         try {
           await this.getUserAttendance();
+          await this.getUserLeave();
           if (userData.admin) {
             this.admin = true;
             await this.getSubordinates();
@@ -182,6 +188,18 @@ export class UserDashboardComponent {
     }
   }
 
+  getProgressBarClassForLeaves(): string {
+    if (this.leaves >= 15) {
+      return 'green';
+    } else if (this.leaves >= 10 && this.leaves < 15) {
+      return 'yellow';
+    } else if (this.leaves >= 5 && this.leaves < 10) {
+      return 'orange';
+    } else {
+      return 'red';
+    }
+  }
+
   getSubordinates(): Promise<void> {
     return new Promise((resolve, reject) => {
       this.loader.show();
@@ -204,6 +222,23 @@ export class UserDashboardComponent {
           console.error("Error fetching subordinates list:", error);
           this.loader.hide();
           reject(error);
+        }
+      });
+    });
+  }
+
+  getUserLeave(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.loader.show();
+      this.api.userLeaves(this.selectedUser).subscribe({
+        next: (_response) => {
+          this.leaves = _response;
+          this.loader.hide();
+          resolve();
+        },
+        error: (_error) => {
+          this.loader.hide();
+          reject(_error);
         }
       });
     });
@@ -282,7 +317,8 @@ export class UserDashboardComponent {
 
   openDialog() {
     this.shift = this.oldShift
-    this.selectedDate = null;
+    this.startDate = null;
+    this.endDate = null;
     this.selectedAttendance = null;
     this.dialogRef1 = this.dialog.open(this.dialogTemplate, {
       panelClass: 'custom-dialog-container',
@@ -298,6 +334,7 @@ export class UserDashboardComponent {
   }
 
   openDialog2() {
+    this.calculateWFHDays();
     this.dialogRef2 = this.dialog.open(this.confirmationPopUp, {
       panelClass: 'custom-dialog-container',
       disableClose: true,
@@ -311,80 +348,102 @@ export class UserDashboardComponent {
     });
   }
 
-  confirmAttendance() {
-    this.loader.show();
+  calculateWFHDays(): void {
+    this.wfhNumber = this.number;
+    this.wfhNumber += this.workFromHomeDays.filter(day => day.label === 'Work From Home').length;
+    this.checkWFHApproval();
+  }
+
+  checkWFHApproval(): void {
+    if (this.wfhNumber > 13 && this.selectedAttendance === 'Work From Home') {
+      this.approvalMessage = true;
+    } else {
+      this.approvalMessage = false;
+    }
+  }
+
+  async confirmAttendance() {
     this.dialogRef2.close('confirm');
     this.now = moment.tz('Asia/Kolkata');
     this.time = this.now.format("DD-MMMM-YYYY HH:mm:ss");
-    this.formattedDate = moment(this.selectedDate).format('DD-MMMM-YYYY');
-    const selDate = moment(this.selectedDate);
-    const year = selDate.year();
-    const quarter = selDate.quarter();
-    const month = selDate.month();
     let allowance = 0;
     let foodAllowance = 0;
 
-    if (this.selectedAttendance == 'Public Holiday' || this.selectedAttendance == 'Leave') {
-      allowance = 0;
-      foodAllowance = 0;
-    } else {
-      if (this.shift == "Shift A") {
-        allowance = 0;
-        foodAllowance = 0;
-      } else if (this.shift == "Shift B") {
-        allowance = 150;
-        foodAllowance = 100;
-      } else if (this.shift == "Shift C") {
-        allowance = 250;
-        foodAllowance = 100;
-      } else if (this.shift == "Shift D") {
-        allowance = 350;
-        foodAllowance = 100;
-      } else if (this.shift == "Shift F") {
-        allowance = 250;
-        foodAllowance = 0;
+    this.loader.show();
+    for (const element of this.workFromHomeDays) {
+      try {
+        if (element.label == 'Leave') {
+          allowance = 0;
+          foodAllowance = 0;
+        } else {
+          if (element.label == "Work From Home" || element.label == "Work From Home - Friday") {
+            if (this.shift == "Shift A") {
+              allowance = 0;
+              foodAllowance = 0;
+            } else if (this.shift == "Shift B") {
+              allowance = 150;
+              foodAllowance = 0;
+            } else if (this.shift == "Shift C") {
+              allowance = 250;
+              foodAllowance = 0;
+            } else if (this.shift == "Shift D") {
+              allowance = 350;
+              foodAllowance = 0;
+            } else if (this.shift == "Shift F") {
+              allowance = 250;
+              foodAllowance = 0;
+            }
+          } else {
+            if (this.shift == "Shift A") {
+              allowance = 0;
+              foodAllowance = 0;
+            } else if (this.shift == "Shift B") {
+              allowance = 150;
+              foodAllowance = 100;
+            } else if (this.shift == "Shift C") {
+              allowance = 250;
+              foodAllowance = 100;
+            } else if (this.shift == "Shift D") {
+              allowance = 350;
+              foodAllowance = 100;
+            } else if (this.shift == "Shift F") {
+              allowance = 250;
+              foodAllowance = 0;
+            }
+          }
+        }
+        this.formattedDate = moment(element.date).format('DD-MMMM-YYYY');
+        const selDate = moment(element.date);
+        const year = selDate.year();
+        const quarter = selDate.quarter();
+        const month = selDate.month();
+
+        await this.api.attendance(this.email, this.email, this.formattedDate, element.label, year.toString(),
+          "Q" + quarter, (month + 1).toString(), this.email, this.time.toString(), this.shift, allowance, foodAllowance).toPromise();
+
+        await this.api.addUserAttendance(this.email, this.email, element.label, year.toString(),
+          "Q" + quarter, this.username).toPromise();
+
+        await this.api.addMonthlyAttendance(this.email, this.email, element.label, year.toString(),
+          "Q" + quarter, this.username, (month + 1).toString(), allowance, foodAllowance).toPromise();
+      } catch (error) {
+        this.loader.hide();
+        this.attendanceError = true;
+        setTimeout(() => {
+          this.attendanceError = false;
+        }, 2000);
+        console.error("Error handling attendance for date:", this.formattedDate, error);
       }
     }
+    this.loader.hide();
+    this.refreshPage();
+  }
 
-    this.loader.show();
-    this.api.attendance(this.email, this.email, this.formattedDate, this.selectedAttendance, year.toString(),
-      "Q" + quarter, (month + 1).toString(), this.email, this.time.toString(), this.shift, allowance, foodAllowance).subscribe({
-        next: () => {
-          this.loader.show();
-          this.api.addUserAttendance(this.email, this.email, this.selectedAttendance, year.toString(),
-            "Q" + quarter, this.username).subscribe({
-              next: () => {
-                this.loader.show();
-                this.api.addMonthlyAttendance(this.email, this.email, this.selectedAttendance, year.toString(),
-                  "Q" + quarter, this.username, (month + 1).toString(), allowance, foodAllowance).subscribe({
-                    next: () => {
-                      const currentUrl = this.router.url;
-                      this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
-                        this.router.navigate([currentUrl]);
-                      });
-                      this.loader.hide();
-                    },
-                    error: (error) => {
-                      this.loader.hide();
-                      console.error("Error adding user attendance:", error);
-                    }
-                  });
-              },
-              error: (error) => {
-                this.loader.hide();
-                console.error("Error adding user attendance:", error);
-              }
-            });
-        },
-        error: (error) => {
-          this.loader.hide();
-          this.attendanceError = true;
-          setTimeout(() => {
-            this.attendanceError = false;
-          }, 2000);
-          console.error("Error calling attendance API:", error);
-        }
-      });
+  refreshPage() {
+    const currentUrl = this.router.url;
+    this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+      this.router.navigate([currentUrl]);
+    });
   }
 
   cancelAttendance() {
@@ -425,23 +484,42 @@ export class UserDashboardComponent {
     return !isWeekend && !isAfterToday && !isBeforeStart && !isSpecificDisabledDate;
   };
 
+  onStartDateInput(event: any): void {
+    this.startDate = event.value;
+  }
 
-  dateChanged(event: MatDatepickerInputEvent<Date>) {
-    this.selectedDate = event.value;
+  onEndDateInput(event: any): void {
+    this.endDate = event.value;
     this.selectedAttendance = null;
     this.filteredShiftOptions = this.shiftOptions;
     this.shift = this.defaultShift;
     this.shiftOptions = ['Shift A', 'Shift B', 'Shift C', 'Shift D', 'Shift F'];
-    if (this.selectedDate) {
-      const dayOfWeek = this.selectedDate.getDay();
-      const dayName = this.days[dayOfWeek];
+  }
 
-      if (dayName === 'Friday') {
-        this.options = ['Work From Home - Friday', 'Work From Office - Friday', 'Leave'];
-      } else {
-        this.options = ['Work From Office', 'Work From Home', 'Leave']
+  filterWorkFromHomeDays(start: Date, end: Date): void {
+    this.workFromHomeDays = [];
+    const currentDate = new Date(start);
+    while (currentDate <= end) {
+      const day = currentDate.getDay();
+      let label = '';
+      if (day !== 0 && day !== 6) {
+        if (this.selectedAttendance == "Work From Office") {
+          label = 'Work From Office';
+          if (day === 5) {
+            label = 'Work From Office - Friday';
+          }
+        } else if (this.selectedAttendance == "Work From Home") {
+          label = 'Work From Home';
+          if (day === 5) {
+            label = 'Work From Home - Friday';
+          }
+        } else if (this.selectedAttendance == "Leave") {
+          label = 'Leave'
+        }
+        this.workFromHomeDays.push({ date: new Date(currentDate), label });
       }
-    } else { /* empty */ }
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
   }
 
   onAttendanceChange(): void {
@@ -449,14 +527,30 @@ export class UserDashboardComponent {
       this.filteredShiftOptions = ['Absent'];
       this.shiftOptions = ['Absent'];
       this.shift = 'Absent';
-    } else if (this.selectedAttendance === 'Public Holiday') {
-      this.filteredShiftOptions = ['Holiday'];
-      this.shiftOptions = ['Holiday'];
-      this.shift = 'Holiday';
     } else {
       this.shiftOptions = ['Shift A', 'Shift B', 'Shift C', 'Shift D', 'Shift F'];
       this.filteredShiftOptions = this.shiftOptions.filter(option => option !== 'Holiday' && option !== 'Absent');
       this.shift = this.defaultShift;
+    }
+    if (!this.isSaveDisabled && this.startDate && this.endDate) {
+      this.showDummy = false;
+      this.filterWorkFromHomeDays(this.startDate, this.endDate);
+    } else {
+      this.showDummy = true;
+      this.workFromHomeDays = [];
+      if (this.startDate && this.endDate) {
+        const currentDate = new Date(this.startDate);
+        while (currentDate <= this.endDate) {
+          let label = '';
+          if (this.selectedAttendance == "Work From Office") {
+            label = 'Work From Office - Friday';
+          } else if (this.selectedAttendance == "Work From Home") {
+            label = 'Work From Home - Friday';
+          }
+          this.workFromHomeDays.push({ date: new Date(currentDate), label });
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+      }
     }
   }
 
@@ -531,79 +625,207 @@ export class UserDashboardComponent {
     });
   }
 
-  sendForApproval() {
-    const selDate = moment(this.selectedDate);
-    const year = selDate.year();
-    const quarter = selDate.quarter();
-    this.formattedDate = moment(this.selectedDate).format('DD-MMMM-YYYY');
-    const month = selDate.month();
-    this.loader.show();
-    this.dialogRef2.close('confirm');
-    let type;
-    if ((this.oldShift != this.shift) && this.number > 12 && (this.selectedAttendance == "Work From Home")) {
-      type = "Extra WFH and Shift Change"
-    } else if (this.oldShift != this.shift) {
-      type = "Shift Change"
-    } else if (this.number > 12) {
-      type = "Extra WFH"
+  onDateChange(): void {
+    this.isSaveDisabled = true;
+    this.selectedAttendance = '';
+    const today = new Date();
+
+    if (this.startDate && this.endDate) {
+      this.isSaveDisabled = this.checkIfOnlyWeekendsSelected();
+    } else {
+      this.isSaveDisabled = true;
     }
 
-    const approvalList = {
-      id: this.email + this.formattedDate,
-      date: this.formattedDate,
-      year: year,
-      quarter: "Q" + quarter,
-      month: (month + 1).toString(),
-      raisedBy: this.email,
-      name: this.username,
-      raisedTo: this.managerId,
-      comments: type,
-      status: "Pending",
-      type: type,
-      prevAttendance: "",
-      prevShift: this.oldShift,
-      newAttendance: this.selectedAttendance,
-      newShift: this.shift
-    };
+    if (this.startDate && this.endDate) {
+      if (this.isSaveDisabled) {
+        if (this.startDate > today || this.endDate > today) {
+          console.log("Only Weekends and Future Dates");
+          this.options = [];
+        } else {
+          console.log("Only Weekends and Past Dates");
+          this.options = ['Work From Office', 'Work From Home'];
+        }
+      } else {
+        if (this.startDate > today || this.endDate > today) {
+          console.log("Weekdays and Weekends and Future Dates");
+          this.options = ['Leave'];
+        } else {
+          console.log("Weekdays and Weekends and Past Dates");
+          this.options = ['Work From Office', 'Work From Home', 'Leave'];
+        }
+      }
+    } else {
+      this.options = [];
+    }
+  }
 
+
+  checkIfOnlyWeekendsSelected(): boolean {
+    if (!this.startDate || !this.endDate) {
+      return true;
+    }
+    const currentDate = new Date(this.startDate);
+    let weekdaysFound = false;
+    while (currentDate <= this.endDate) {
+      const day = currentDate.getDay();
+      if (day !== 0 && day !== 6) {
+        weekdaysFound = true;
+        break;
+      }
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    return !weekdaysFound;
+  }
+
+  async sendForApproval() {
     this.loader.show();
-    this.api.checkAttendanceDuplicate(this.email, this.formattedDate).subscribe({
-      next: (response) => {
-        if (response.status === "Not Exist") {
-          this.loader.show();
-          this.api.sendForApproval(approvalList).subscribe({
-            next: (response) => {
-              if (response === "ApprovalList saved successfully.") {
-                this.approvalSuccess = true;
-                setTimeout(() => {
-                  this.approvalSuccess = false;
-                }, 3000);
-              } else if (response === "Error: ApprovalList with this ID already exists.") {
-                this.approvalError = true;
-                setTimeout(() => {
-                  this.approvalError = false;
-                }, 3000);
-              }
-              this.loader.hide();
-            },
-            error: (error) => {
-              console.error("Error during API call:", error);
-              this.loader.hide();
-            }
-          });
-        } else if (response.status === "Exist") {
-          console.log()
+    this.dialogRef2.close('confirm');
+    let currentWFHCount = this.number;
+    for (const element of this.workFromHomeDays) {
+      if (element.label === "Work From Home") {
+        currentWFHCount++;
+      }
+
+      let type = '';
+      let allowance: number = 0;
+      let foodAllowance: number = 0;
+
+      if ((this.oldShift != this.shift) && this.wfhNumber > 13 && (element.label == "Work From Home")) {
+        type = "Extra WFH and Shift Change";
+      } else if ((this.oldShift != this.shift) && element.label != "Leave" && !this.showDummy) {
+        type = "Shift Change";
+      } else if ((this.oldShift != this.shift) && element.label == "Leave") {
+        type = "Leave"
+      } else if (this.showDummy && (this.oldShift != this.shift)) {
+        type = "Weekends and Shift Change";
+      } else if (this.showDummy) {
+        type = "Weekends";
+      }else if (currentWFHCount > 13) {
+        type = "Extra WFH";
+      }
+
+      console.log(type)
+
+      if (element.label == 'Leave') {
+        allowance = 0;
+        foodAllowance = 0;
+      } else {
+        if (element.label == "Work From Home" || element.label == "Work From Home - Friday") {
+          if (this.shift == "Shift A") {
+            allowance = 0;
+            foodAllowance = 0;
+          } else if (this.shift == "Shift B") {
+            allowance = 150;
+            foodAllowance = 0;
+          } else if (this.shift == "Shift C") {
+            allowance = 250;
+            foodAllowance = 0;
+          } else if (this.shift == "Shift D") {
+            allowance = 350;
+            foodAllowance = 0;
+          } else if (this.shift == "Shift F") {
+            allowance = 250;
+            foodAllowance = 0;
+          }
+        } else {
+          if (this.shift == "Shift A") {
+            allowance = 0;
+            foodAllowance = 0;
+          } else if (this.shift == "Shift B") {
+            allowance = 150;
+            foodAllowance = 100;
+          } else if (this.shift == "Shift C") {
+            allowance = 250;
+            foodAllowance = 100;
+          } else if (this.shift == "Shift D") {
+            allowance = 350;
+            foodAllowance = 100;
+          } else if (this.shift == "Shift F") {
+            allowance = 250;
+            foodAllowance = 0;
+          }
+        }
+      }
+
+      this.formattedDate = moment(element.date).format('DD-MMMM-YYYY');
+      const selDate = moment(element.date);
+      const year = selDate.year();
+      const quarter = selDate.quarter();
+      const month = selDate.month();
+
+      if (type === "Extra WFH" && element.label === "Work From Home - Friday") {
+
+        await this.api.attendance(this.email, this.email, this.formattedDate, element.label, year.toString(),
+          "Q" + quarter, (month + 1).toString(), this.email, this.time.toString(), this.shift, allowance, foodAllowance).toPromise();
+
+        await this.api.addUserAttendance(this.email, this.email, element.label, year.toString(),
+          "Q" + quarter, this.email).toPromise();
+
+        await this.api.addMonthlyAttendance(this.email, this.email, element.label, year.toString(),
+          "Q" + quarter, this.email, (month + 1).toString(), allowance, foodAllowance).toPromise();
+        continue;
+      }
+
+      if (type != "Extra WFH and Shift Change" && currentWFHCount <= 13 && element.label == "Work From Home" && !this.showDummy) {
+        await this.api.attendance(this.email, this.email, this.formattedDate, element.label, year.toString(),
+          "Q" + quarter, (month + 1).toString(), this.email, this.time.toString(), this.shift, allowance, foodAllowance).toPromise();
+
+        await this.api.addUserAttendance(this.email, this.email, element.label, year.toString(),
+          "Q" + quarter, this.email).toPromise();
+
+        await this.api.addMonthlyAttendance(this.email, this.email, element.label, year.toString(),
+          "Q" + quarter, this.email, (month + 1).toString(), allowance, foodAllowance).toPromise();
+        continue;
+      }
+
+      const approvalList = {
+        id: this.email + this.formattedDate,
+        date: this.formattedDate,
+        year: year,
+        quarter: "Q" + quarter,
+        month: (month + 1).toString(),
+        raisedBy: this.email,
+        name: this.username,
+        raisedTo: this.managerId,
+        comments: type,
+        status: "Pending",
+        type: type,
+        prevAttendance: "",
+        prevShift: this.oldShift,
+        newAttendance: element.label,
+        newShift: this.shift
+      };
+
+      try {
+        this.loader.show();
+        const checkResponse = await this.api.checkAttendanceDuplicate(this.email, this.formattedDate).toPromise();
+        if (checkResponse.status === "Not Exist") {
+          const sendResponse = await this.api.sendForApproval(approvalList).toPromise();
+          if (sendResponse === "ApprovalList saved successfully.") {
+            this.approvalSuccess = true;
+            setTimeout(() => {
+              this.approvalSuccess = false;
+            }, 3000);
+          } else if (sendResponse === "Error: ApprovalList with this ID already exists.") {
+            this.approvalError = true;
+            setTimeout(() => {
+              this.approvalError = false;
+            }, 3000);
+          }
+        } else if (checkResponse.status === "Exist") {
           this.attendanceError = true;
           setTimeout(() => {
             this.attendanceError = false;
           }, 2000);
         }
-        this.loader.hide();
-      },
-      error: (error) => {
+      } catch (error) {
         console.error("Error during API call:", error);
         this.loader.hide();
+      } finally {
+        this.loader.hide();
       }
-    })
+      this.loader.hide();
+    }
+    this.refreshPage();
   }
 }

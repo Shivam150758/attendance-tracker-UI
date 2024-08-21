@@ -2,15 +2,15 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from 'src/environments/environment.prod';
+// import { environment } from 'src/environments/environment.prod';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiCallingService {
 
-  private baseUrl = environment.apiUrl;
-  // private baseUrl = "http://localhost:8080"
+  // private baseUrl = environment.apiUrl;
+  private baseUrl = "http://localhost:8080"
 
   private loginUrl = `${this.baseUrl}/login`;
   private markAttendance = `${this.baseUrl}/addAttendance`;
@@ -36,6 +36,11 @@ export class ApiCallingService {
   private checkAttendance = `${this.baseUrl}/checkAttendance`;
   private userAllowance = `${this.baseUrl}/userAllowance`;
   private downloadExcelSheet = `${this.baseUrl}/download/excel`;
+  private usersLeaves = `${this.baseUrl}/getLeaves`;
+  private updateLeaves = `${this.baseUrl}/updateLeaves`;
+  private todaysAttendance = `${this.baseUrl}/todayAttendance`;
+  private qtrAttendance = `${this.baseUrl}/qtrAttendance`;
+  private upcomingLeaves = `${this.baseUrl}/upcomingLeaves`;
 
   constructor(private http: HttpClient) { }
 
@@ -170,7 +175,27 @@ export class ApiCallingService {
     return this.http.post(this.userAllowance, { emailId: email, year: year, quarter: quarter });
   }
 
-  downloadExcel(year: number, month: number): Observable<Blob> {
-    return this.http.get(`${this.downloadExcelSheet}?year=${year}&month=${month}`, { responseType: 'blob' });
+  downloadExcel(year: number, month: number, user: string): Observable<Blob> {
+    return this.http.get(`${this.downloadExcelSheet}?year=${year}&month=${month}&user=${user}`, { responseType: 'blob' });
+  }
+
+  userLeaves(email: string): Observable<number> {
+    return this.http.post<number>(this.usersLeaves, { emailId: email });
+  }
+
+  updateUserLeave(email: string): Observable<number> {
+    return this.http.post<number>(this.updateLeaves, { emailId: email });
+  }
+
+  getTodaysAttendance(emailIds: string[], date: string): Observable<any> {
+    return this.http.post<any>(this.todaysAttendance, { emailIds: emailIds, date: date })
+  }
+
+  getQtrAttendance(emailIds: string[], year: string, quarter: string): Observable<any> {
+    return this.http.post<any>(this.qtrAttendance, { emailIds: emailIds, quarter: quarter, year: year })
+  }
+
+  getUpcomingLeaves(): Observable<any> {
+    return this.http.post<any>(this.upcomingLeaves, {});
   }
 }

@@ -47,8 +47,21 @@ export class AdminPanelComponent {
     11: 'November',
     12: 'December'
   };
-  detailedArray: any;
+  detailedArray: any[] = [];
   daysInMonth: number[] = [];
+  todaysAttendanceData: any[] = [];
+  qtrAttendanceData: any[] = [];
+  wfo!: number;
+  wfoList: any[] = [];
+  wfh!: number;
+  wfhList: any[] = [];
+  leave!: number;
+  leaveList: any[] = [];
+  notMarkedList: any[] = [];
+  reporteeList: any[] = [];
+  reportType: any;
+  popUpList: any[] = [];
+  upcomingLeaveList!: any[];
 
   constructor(private api: ApiCallingService, private loader: LoaderService, private dialog: MatDialog,
     private router: Router) { }
@@ -61,6 +74,9 @@ export class AdminPanelComponent {
   @ViewChild('downloadAttendanceReport')
   downloadReportPopup!: TemplateRef<any>;
 
+  @ViewChild('usersReport')
+  userReportPopup!: TemplateRef<any>;
+
   sortedColumn: string = 'wfh';
   sortAscending: boolean = true;
   dialogRef1!: MatDialogRef<any>;
@@ -72,6 +88,7 @@ export class AdminPanelComponent {
     await this.loadDistinctYears();
     await this.loadDistinctQuarters();
     await this.getDistinctMonths();
+    this.upcomingLeaves();
     const userDataString = sessionStorage.getItem('user');
     if (userDataString) {
       const userData = JSON.parse(userDataString);
@@ -98,19 +115,9 @@ export class AdminPanelComponent {
         }
         this.api.getListofSubOrdinates(this.emailId).subscribe({
           next: (subordinateResponse) => {
-            this.detailedArray = subordinateResponse;
-            this.mergedArray = this.detailedArray.map((user: any) => {
-              const report = this.attendanceReportData.find((report: any) => report.emailId === user.emailId) || {};
-              const defaultValues = {
-                wfh: 0,
-                wfo: 0,
-                wfhFriday: 0,
-                wfoFriday: 0,
-                leaves: 0,
-                holidays: 0
-              };
-              return { ...defaultValues, ...user, ...report };
-            });
+            this.detailedArray = (subordinateResponse as any[]) || [];
+            this.getQuarterlyAttendance();
+            this.getTodaysAttendance();
             this.loader.hide();
           },
           error: (error) => {
@@ -121,6 +128,87 @@ export class AdminPanelComponent {
       },
       error: (error) => {
         console.error("Error fetching attendance report:", error);
+        this.loader.hide();
+      }
+    });
+  }
+
+  getTodaysAttendance() {
+    this.loader.show()
+    const emailIds: any[] = [];
+    const time = moment.tz('Asia/Kolkata');
+    const date = time.format("DD-MMMM-YYYY");
+    this.wfh = 0;
+    this.wfo = 0;
+    this.leave = 0;
+    this.wfhList = [];
+    this.wfoList = [];
+    this.leaveList = [];
+    this.notMarkedList = [];
+    this.detailedArray.forEach((element: any) => {
+      emailIds.push(element.emailId);
+    });
+    this.api.getTodaysAttendance(emailIds, date).subscribe({
+      next: (attendance) => {
+        this.todaysAttendanceData = attendance;
+        attendance.forEach((att: any) => {
+          const userInfo = this.reporteeList.find((user: any) => user.emailId === att.emailId);
+          if (userInfo) {
+            att.name = userInfo.name;
+          }
+          console.log(att)
+          if (att.attendance === 'Work From Home' || att.attendance === 'Work From Home - Friday') {
+            this.wfhList.push(att);
+            this.wfh++;
+          } else if (att.attendance === 'Work From Office' || att.attendance === 'Work From Office - Friday') {
+            this.wfoList.push(att);
+            this.wfo++;
+          } else if (att.attendance === 'Leave') {
+            this.leaveList.push(att);
+            this.leave++;
+          }
+        });
+        this.loader.hide()
+      },
+      error: (error) => {
+        console.error("Error fetching subordinates list:", error);
+        this.loader.hide();
+      }
+    });
+  }
+
+  getQuarterlyAttendance() {
+    this.loader.show();
+    this.reporteeList = [];
+    const emailIds: any[] = [];
+    this.detailedArray.forEach((element: any) => {
+      emailIds.push(element.emailId);
+    });
+    this.api.getQtrAttendance(emailIds, this.currentYear.toString(), "Q" + this.currentQuarter).subscribe({
+      next: (response) => {
+        if (response) {
+          this.qtrAttendanceData = response;
+          this.mergedArray = this.detailedArray.map((user: any) => {
+            const report = this.qtrAttendanceData.find((report: any) => report.emailId === user.emailId) || {};
+            const upcomingLeave = this.upcomingLeaveList.find((leave: any) => leave.emailId === user.emailId) || {};
+
+            const defaultValues = {
+              wfh: 0,
+              wfo: 0,
+              wfhFriday: 0,
+              wfoFriday: 0,
+              leaves: 0,
+              holidays: 0,
+              upcomingLeaveDates: upcomingLeave.upcomingLeaveDates || ''
+            };
+
+            return { ...defaultValues, ...user, ...report };
+          });
+          this.reporteeList = this.mergedArray;
+        }
+        this.loader.hide();
+      },
+      error: () => {
         this.loader.hide();
       }
     });
@@ -166,30 +254,6 @@ export class AdminPanelComponent {
     });
   }
 
-  openUserDetails(user: any) {
-    this.loader.show();
-    this.username = user.name;
-    this.emailId = user.emailId;
-    this.team = user.team;
-    this.lastlogin = user.lastLogin;
-    this.api.getUserAttendance(this.emailId, this.currentYear.toString(), "Q" + this.currentQuarter).subscribe({
-      next: (response) => {
-        if (response) {
-          this.attendanceData = response;
-        }
-        this.loader.hide();
-      },
-      error: () => {
-        this.loader.hide();
-      }
-    });
-    this.dialogRef = this.dialog.open(this.userDetailsPopup, {
-      panelClass: 'custom-dialog-container',
-      disableClose: true,
-      width: '800px'
-    });
-  }
-
   downloadReportPopUp() {
     this.getDistinctMonths();
     this.selectedRadio = "1";
@@ -198,7 +262,7 @@ export class AdminPanelComponent {
     this.selectedMonth = this.currentMonth.toString();
     this.dialogRef1 = this.dialog.open(this.downloadReportPopup, {
       disableClose: true,
-      width: '500px'
+      width: '520px'
     });
   }
 
@@ -229,10 +293,16 @@ export class AdminPanelComponent {
   generateExcel(): void {
     const year = this.selectedYear;
     const month = this.selectedMonth;
-
-    this.api.downloadExcel(year, month).subscribe({
-      next: (blob) => this.saveFile(blob, `Attendance_${year}_${month}.xlsx`),
-      error: (error) => console.error('Download failed:', error)
+    this.loader.show()
+    this.api.downloadExcel(year, month, this.emailId).subscribe({
+      next: (blob) => {
+        this.saveFile(blob, `Attendance_${year}_${month}.xlsx`)
+        this.loader.hide();
+      },
+      error: (error) => {
+        console.error('Download failed:', error)
+        this.loader.hide();
+      }
     });
   }
 
@@ -247,5 +317,54 @@ export class AdminPanelComponent {
   downloadReport() {
     this.updateDaysInMonth();
     this.dialogRef1.close();
+  }
+
+  openUsersList(type: any) {
+    this.reportType = type;
+    this.popUpList = [];
+    if (type == 'Reportees') {
+      this.popUpList = this.reporteeList;
+    } else if (type == 'Working From Home') {
+      this.popUpList = this.wfhList;
+    } else if (type == 'Working From Office') {
+      this.popUpList = this.wfoList;
+    } else if (type == 'On Leave') {
+      this.popUpList = this.leaveList;
+    } else if (type == 'Not Marked') {
+      this.popUpList = this.notMarkedList;
+    }
+    this.dialogRef1 = this.dialog.open(this.userReportPopup, {
+      disableClose: true,
+      width: '500px'
+    });
+  }
+
+  upcomingLeaves() {
+    this.upcomingLeaveList = [];
+    this.api.getUpcomingLeaves().subscribe({
+      next: (res) => {
+        const groupedByEmailId = res.reduce((acc: any, current: any) => {
+          const { emailId, date } = current;
+          if (!acc[emailId]) {
+            acc[emailId] = {
+              emailId: emailId,
+              dates: []
+            };
+          }
+          acc[emailId].dates.push(date);
+          return acc;
+        }, {});
+
+        this.upcomingLeaveList = Object.keys(groupedByEmailId).map(emailId => {
+          return {
+            emailId: emailId,
+            upcomingLeaveDates: groupedByEmailId[emailId].dates.join(', ')
+          };
+        });
+      },
+      error: (err) => {
+        console.log(err);
+      }
+    });
   }
 }
